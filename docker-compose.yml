@@ -5,6 +5,9 @@ services:
   app:
     build: ./app
     restart: unless-stopped
+    volumes:
+      - ./app/server.php:/app/server.php:ro
+      - ./app/public:/app/public:ro
     expose:
       - "8080"
     labels:
