@@ -1,30 +1,16 @@
 services:
   # Servidor da aula em PHP: entrega a página e repassa os desenhos em tempo real.
+  # Quem recebe as visitas e cuida do HTTPS é o Traefik que já roda na VPS;
+  # as etiquetas (labels) abaixo avisam o Traefik qual subdomínio vem para cá.
   app:
-    build: ./app
+    build: .
     restart: unless-stopped
-    # Não fica aberto para a internet: quem recebe as visitas é o Caddy, logo abaixo.
     expose:
       - "8080"
-
-  # Caddy: recebe o subdomínio, cria e renova o certificado HTTPS sozinho
-  # e encaminha tudo para o app (inclusive a conexão ao vivo em /ws).
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    depends_on:
-      - app
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    environment:
-      - DOMINIO=${DOMINIO:?Defina DOMINIO no arquivo .env}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-
-volumes:
-  caddy_data:
-  caddy_config:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.aula-funcoes.entrypoints=websecure
+      - traefik.http.routers.aula-funcoes.rule=Host(`${DOMINIO:?Defina DOMINIO no arquivo .env}`)
+      - traefik.http.routers.aula-funcoes.tls=true
+      - traefik.http.routers.aula-funcoes.tls.certresolver=letsencrypt
+      - traefik.http.services.aula-funcoes.loadbalancer.server.port=8080
