@@ -1,0 +1,1746 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Funções afim e quadrática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+/* Layout: uma coluna de leitura sobre papel quadriculado. Caneta azul = afim, caneta verde = quadrática, caneta vermelha = cuidado, marca-texto = dica. */
+:root{
+  --paper:#F7F9FC; --paper-grid:#E6ECF5; --sheet:#FFFFFF; --ink:#18202F; --muted:#586379;
+  --line:#D8DFEA; --line-strong:#B5C0D2; --g-grid:#E4E9F1;
+  --blue:#1D5BD6; --blue-bg:#E7EEFC; --green:#0F7A57; --green-bg:#E1F3EA;
+  --red:#C42F3E; --red-bg:#FCEBEC; --marker:#FFE97A; --amber:#C46F00; --violet:#7440C9;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-math:"STIX Two Text","Cambria Math",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F131A; --paper-grid:#171D27; --sheet:#151B24; --ink:#E7ECF4; --muted:#9BA6B8;
+    --line:#283242; --line-strong:#3C495D; --g-grid:#222B38;
+    --blue:#8AB0FA; --blue-bg:#18284A; --green:#5CD3A6; --green-bg:#123228;
+    --red:#FF8B93; --red-bg:#3B1A1E; --marker:#5B4A06; --amber:#F2AE4A; --violet:#B999FA;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F131A; --paper-grid:#171D27; --sheet:#151B24; --ink:#E7ECF4; --muted:#9BA6B8;
+  --line:#283242; --line-strong:#3C495D; --g-grid:#222B38;
+  --blue:#8AB0FA; --blue-bg:#18284A; --green:#5CD3A6; --green-bg:#123228;
+  --red:#FF8B93; --red-bg:#3B1A1E; --marker:#5B4A06; --amber:#F2AE4A; --violet:#B999FA;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;color-scheme:light}
+img{max-width:100%}
+body{
+  margin:0;
+  padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);
+  background-color:var(--paper); color:var(--ink);
+  background-image:linear-gradient(var(--paper-grid) 1px,transparent 1px),linear-gradient(90deg,var(--paper-grid) 1px,transparent 1px);
+  background-size:28px 28px;
+  font:400 1.0625rem/1.65 var(--f-body);
+  padding-inline:16px;
+}
+main{max-width:46rem;margin:0 auto;padding-block:2rem 5rem;display:flex;flex-direction:column;gap:4rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-weight:800;font-size:clamp(2.4rem,8vw,3.5rem);letter-spacing:-.02em}
+h2{font-weight:800;font-size:clamp(1.9rem,5.5vw,2.5rem);letter-spacing:-.015em}
+h3{font-weight:600;font-size:1.3rem}
+p{margin:0}
+a{color:inherit}
+mark{background:var(--marker);color:var(--ink);padding:0 .15em;border-radius:3px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.mat{font-family:var(--f-math);font-size:1.15em}
+.mat i,.formula i{font-style:italic}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* Topo */
+.topo{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1.5rem;align-items:center}
+.topo .texto{display:flex;flex-direction:column;gap:1rem;min-width:0}
+.lead{font-size:1.15rem;color:var(--muted);max-width:34rem}
+.mapa{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.25rem}
+.mapa a{text-decoration:none;font-size:.92rem;font-weight:700;padding:.35rem .8rem;border:1.5px solid var(--line-strong);border-radius:999px;background:var(--sheet)}
+.mapa a:hover{border-color:var(--ink)}
+#heroG{width:100%;height:auto;display:block}
+@media (max-width:640px){.topo{grid-template-columns:minmax(0,1fr)} #heroG{max-width:280px}}
+
+/* Partes */
+section{display:flex;flex-direction:column;gap:1.5rem;scroll-margin-top:1rem}
+section[data-cor="blue"]{--cor:var(--blue);--cor-bg:var(--blue-bg)}
+section[data-cor="green"]{--cor:var(--green);--cor-bg:var(--green-bg)}
+section[data-cor="ink"]{--cor:var(--ink);--cor-bg:var(--sheet)}
+.cab{display:flex;flex-direction:column;gap:.4rem;border-bottom:3px solid var(--cor);padding-bottom:.75rem}
+.cab .eyebrow{color:var(--cor)}
+.bloco{display:flex;flex-direction:column;gap:.85rem}
+.bloco>p,.bloco>ul{max-width:40rem}
+ul.lista{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.35rem}
+
+.formula{font-family:var(--f-math);font-size:clamp(1.9rem,7vw,2.7rem);text-align:center;padding:1rem 1.25rem;background:var(--sheet);border:2px solid var(--cor);border-radius:14px;line-height:1.3}
+.k{color:var(--cor);font-weight:600;font-style:italic}
+.legenda{display:grid;gap:.5rem;margin:0;padding:0;list-style:none}
+.legenda li{display:flex;gap:.75rem;align-items:baseline}
+.letra{flex:none;display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:50%;background:var(--cor-bg);color:var(--cor);font:italic 600 1.2rem var(--f-math)}
+
+.box{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.dica{background:var(--sheet);border:1.5px dashed var(--line-strong);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.dica .rotulo{align-self:flex-start;background:var(--marker);color:var(--ink);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .45rem;border-radius:3px}
+.cuidado{background:var(--red-bg);border:2px solid var(--red);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.cuidado .rotulo{color:var(--red);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
+
+.rolar{overflow-x:auto;max-width:100%}
+table.tab{border-collapse:collapse;font-variant-numeric:tabular-nums;background:var(--sheet);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:100%}
+.tab th,.tab td{padding:.55rem .85rem;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.tab tr:last-child td,.tab tr:last-child th{border-bottom:0}
+.tab th{font-size:.85rem;color:var(--muted);font-weight:700;text-align:left}
+.tab thead th{text-align:center}
+.tab td.mat{font-size:1.1rem}
+.tab .forte{color:var(--cor);font-weight:700}
+
+figure.graf{margin:0;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;gap:.5rem}
+figure.graf svg{width:100%;height:auto;display:block}
+figcaption{font-size:.9rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.35rem 1rem}
+.dot{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.35rem;vertical-align:-.05rem}
+.g-grid{stroke:var(--g-grid);stroke-width:1}
+.g-axis{stroke:var(--muted);stroke-width:1.5}
+.g-lab{fill:var(--muted);font:400 13px var(--f-body)}
+.g-name{fill:var(--muted);font:700 13px var(--f-body)}
+.g-pt{fill:var(--ink);font:700 13px var(--f-body);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.g-sim{stroke:var(--violet);stroke-width:1.5;stroke-dasharray:5 5}
+
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.duo .box{align-items:flex-start}
+.duo svg{width:100%;max-width:200px;height:auto;display:block}
+.duo h3{font-size:1.15rem}
+
+/* Máquina */
+.maquina{display:flex;flex-wrap:wrap;align-items:stretch;gap:.6rem}
+.caixa{flex:1 1 7rem;min-width:0;background:var(--sheet);border:1.5px solid var(--line-strong);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;text-align:center}
+.caixa strong{font:600 2rem var(--f-math);font-variant-numeric:tabular-nums}
+.caixa.motor{flex:1.6 1 11rem;background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.caixa.motor .rot{color:var(--paper)}
+.rot{font-size:.8rem;color:var(--muted);font-weight:700}
+.seta{align-self:center;font-size:1.6rem;color:var(--muted)}
+.teste{display:flex;flex-direction:column;gap:.5rem}
+.linha{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+input[type="text"]{font:600 1.25rem var(--f-body);width:7rem;padding:.4rem .7rem;border:1.5px solid var(--line-strong);border-radius:10px;background:var(--sheet);color:var(--ink)}
+.erro{color:var(--red);font-size:.9rem;font-weight:700}
+.conta{font-family:var(--f-math);font-size:1.3rem}
+
+/* Passos */
+ol.passos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.85rem;counter-reset:p}
+ol.passos>li{counter-increment:p;display:grid;grid-template-columns:2.4rem minmax(0,1fr);gap:.9rem;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem}
+ol.passos>li::before{content:counter(p);width:2.4rem;height:2.4rem;border-radius:50%;background:var(--cor);color:var(--sheet);display:flex;align-items:center;justify-content:center;font:800 1.15rem var(--f-display)}
+ol.passos>li>div{display:flex;flex-direction:column;gap:.45rem;min-width:0}
+.casos{display:grid;gap:.4rem;margin:0;padding:0;list-style:none}
+.casos li{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+.casos .mat{min-width:4.2rem;font-weight:600}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .15em;line-height:1.2}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .25em .05em}
+.frac>span:last-child{padding-top:.05em}
+.grande{font-size:1.6rem;text-align:center;padding:.5rem 0}
+
+/* Agora você */
+.voce{border:2px dashed var(--cor);border-radius:14px;padding:1.25rem;background:var(--sheet);display:flex;flex-direction:column;gap:1.25rem}
+.voce h3{color:var(--cor)}
+.ex{display:flex;flex-direction:column;gap:.6rem;padding-top:1rem;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0;padding-top:0}
+.ex .num{font-weight:700;color:var(--cor)}
+details summary{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;list-style:none;color:var(--cor);font-weight:700;border:1.5px solid var(--cor);border-radius:999px;padding:.3rem .95rem;font-size:.95rem}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"+";font-size:1.1rem;line-height:1}
+details[open] summary::before{content:"−"}
+.resp{margin-top:.7rem;background:var(--cor-bg);border-radius:10px;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.4rem}
+
+/* Laboratório */
+.lab{--labcor:var(--blue);--labbg:var(--blue-bg);background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+.lab.quad{--labcor:var(--green);--labbg:var(--green-bg)}
+.modo{display:flex;flex-wrap:wrap;gap:.5rem}
+button{font:700 .95rem var(--f-body);cursor:pointer;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--sheet);color:var(--ink);padding:.45rem 1.05rem}
+button:hover{border-color:var(--ink)}
+.modo button[aria-pressed="true"]{background:var(--labcor);border-color:var(--labcor);color:var(--sheet)}
+#labEq{font:600 clamp(1.5rem,6vw,2rem) var(--f-math);color:var(--labcor)}
+.ctrl{display:grid;grid-template-columns:2rem minmax(0,1fr) 3rem;gap:.75rem;align-items:center}
+.ctrl label{font:italic 600 1.3rem var(--f-math);color:var(--labcor)}
+.ctrl output{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+input[type="range"]{width:100%;accent-color:var(--labcor)}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem}
+.chip{background:var(--labbg);border-radius:10px;padding:.55rem .8rem;display:flex;flex-direction:column}
+.chip span{font-size:.8rem;color:var(--muted);font-weight:700}
+.chip strong{font-size:1.05rem}
+.desafios{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.desafios h3{font-size:1.05rem;margin-bottom:.4rem}
+.desafios ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+.desafios li{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.5rem .75rem;border:1px solid var(--line);border-radius:10px;background:var(--sheet)}
+.st{flex:none;font-size:.78rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;background:var(--paper);color:var(--muted);border:1px solid var(--line)}
+.desafios li.ok{border-color:var(--green)}
+.desafios li.ok .st{background:var(--green);color:var(--sheet);border-color:var(--green)}
+#parabens{font-weight:700;color:var(--green)}
+
+/* Resumão */
+.cola{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.cola .card{background:var(--sheet);border:2px solid var(--c);border-radius:14px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.7rem}
+.cola .card h3{color:var(--c)}
+.cola dl{margin:0;display:grid;gap:.55rem}
+.cola dt{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cola dd{margin:0}
+ol.erros{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:.5rem}
+/* Modo desenho */
+#quadro{position:fixed;inset:0;width:100%;height:100%;z-index:40;pointer-events:none}
+body.desenhando #quadro{pointer-events:auto;touch-action:none;cursor:crosshair;box-shadow:inset 0 0 0 3px var(--pen-atual,var(--blue))}
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none}
+.barra>*{pointer-events:auto}
+.pilula{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4rem;max-width:100%;background:var(--sheet);border:1px solid var(--line-strong);border-radius:24px;padding:.4rem;box-shadow:0 6px 24px rgba(10,20,40,.18)}
+.kit{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.3rem}
+button.cor,button.ico{width:38px;height:38px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid transparent;background:transparent;color:var(--ink)}
+button.cor span{width:22px;height:22px;border-radius:50%;display:block}
+button.cor[aria-pressed="true"],button.ico[aria-pressed="true"]{border-color:var(--ink)}
+button.ico:hover,button.cor:hover{background:var(--paper)}
+button.principal{display:inline-flex;align-items:center;gap:.45rem;background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+button.principal:hover{border-color:var(--ink)}
+.sep{width:1px;height:24px;background:var(--line-strong);margin:0 .15rem}
+.aviso{background:var(--ink);color:var(--sheet);font-size:.9rem;font-weight:700;padding:.45rem .85rem;border-radius:10px;max-width:24rem;text-align:center}
+/* Aula ao vivo: a coluna tem 400px de largura em todos os aparelhos e é escalada para caber na tela,
+   assim um traço feito no notebook cai exatamente no mesmo lugar no celular. */
+html.ao-vivo{font-size:16px}
+html.ao-vivo #palco{width:calc(400px * var(--escala,1));margin:0 auto;overflow:hidden}
+html.ao-vivo main{width:400px;max-width:none;margin:0;transform-origin:0 0;transform:scale(var(--escala,1))}
+html.ao-vivo h1{font-size:2.4rem}
+html.ao-vivo h2{font-size:1.9rem}
+html.ao-vivo .formula{font-size:1.9rem}
+html.ao-vivo #labEq{font-size:1.5rem}
+html.ao-vivo .topo{grid-template-columns:minmax(0,1fr)}
+html.ao-vivo #heroG{max-width:280px}
+
+.painel{width:min(24rem,100%);background:var(--sheet);border:1px solid var(--line-strong);border-radius:16px;padding:1rem 1.1rem;box-shadow:0 10px 30px rgba(10,20,40,.22);display:flex;flex-direction:column;gap:.7rem;max-height:70vh;overflow:auto}
+.painel h3{font-size:1.15rem}
+.painel p{font-size:.95rem}
+.painel label{font-size:.85rem;font-weight:700;color:var(--muted)}
+.painel .campo{display:flex;flex-direction:column;gap:.3rem}
+.painel .grupo{display:flex;flex-direction:column;gap:.7rem}
+.painel input[type="text"]{width:100%;font-size:1.05rem}
+.painel .linha{flex-wrap:nowrap;gap:.5rem}
+.painel .linha input{flex:1;min-width:0;width:auto}
+.painel .topo-painel{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+button.primario{background:var(--blue);border-color:var(--blue);color:var(--sheet)}
+button.primario:hover{border-color:var(--ink)}
+.ou{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:.6rem}
+.ou::before,.ou::after{content:"";flex:1;height:1px;background:var(--line)}
+.codigo{font:800 1.7rem var(--f-display);letter-spacing:.14em}
+.status{font-size:.85rem;font-weight:700;color:var(--muted)}
+.status.ok{color:var(--green)}
+.status.ruim{color:var(--red)}
+.pessoas{display:flex;flex-wrap:wrap;gap:.35rem}
+.pessoa{font-size:.85rem;font-weight:700;padding:.15rem .6rem;border-radius:999px;border:1.5px solid var(--c,var(--line-strong));color:var(--ink)}
+input[readonly]{font-size:.85rem!important;font-weight:400!important;color:var(--muted)!important}
+button.vivo{display:inline-flex;align-items:center;gap:.45rem}
+.ponto-vivo{width:.55rem;height:.55rem;border-radius:50%;background:var(--red);display:none}
+html.conectado .ponto-vivo{display:inline-block;animation:pulsar 1.6s ease-in-out infinite}
+@keyframes pulsar{50%{opacity:.35}}
+#cursores{position:fixed;inset:0;pointer-events:none;z-index:45;overflow:hidden}
+.cursor{position:absolute;left:0;top:0;display:flex;align-items:center;gap:.3rem;will-change:transform}
+.cursor i{width:14px;height:14px;border-radius:50%;background:var(--c);border:2px solid var(--sheet);flex:none}
+.cursor span{font-size:.75rem;font-weight:700;background:var(--c);color:var(--sheet);padding:.05rem .45rem;border-radius:999px;white-space:nowrap}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="palco">
+<main>
+  <header class="topo">
+    <div class="texto">
+      <p class="eyebrow">Matemática · 9º ano</p>
+      <h1>Funções afim e quadrática</h1>
+      <p class="lead">Um guia passo a passo. Leia na ordem, faça os exemplos junto e tente cada exercício antes de abrir a resposta. Use o botão <strong>Desenhar</strong>, lá embaixo, para rabiscar na página enquanto explica.</p>
+      <nav class="mapa" aria-label="Partes do guia">
+        <a href="#parte1">1. O que é função</a>
+        <a href="#parte2">2. Função afim</a>
+        <a href="#parte3">3. Função quadrática</a>
+        <a href="#parte4">4. Laboratório</a>
+        <a href="#parte5">5. Resumão</a>
+      </nav>
+    </div>
+    <svg id="heroG" role="img" aria-label="Uma reta azul e uma parábola verde desenhadas no plano cartesiano"></svg>
+  </header>
+
+  <!-- PARTE 1 -->
+  <section id="parte1" data-cor="ink">
+    <div class="cab">
+      <p class="eyebrow">Parte 1</p>
+      <h2>O que é uma função?</h2>
+    </div>
+    <div class="bloco">
+      <p>Pense numa <mark>máquina</mark>. Você coloca um número, ela faz uma conta e devolve outro número. Isso é uma função.</p>
+      <p>O número que <strong>entra</strong> a gente chama de <span class="mat"><i>x</i></span>. O número que <strong>sai</strong> a gente chama de <span class="mat"><i>f</i>(<i>x</i>)</span>, que se lê “f de x”. Às vezes também chamam de <span class="mat"><i>y</i></span>.</p>
+    </div>
+
+    <div class="maquina" aria-live="polite">
+      <div class="caixa"><span class="rot">Entra (x)</span><strong id="maqIn">3</strong></div>
+      <span class="seta" aria-hidden="true">→</span>
+      <div class="caixa motor"><span class="rot">Máquina f(x) = 2x + 1</span><strong>×2 , +1</strong><span class="rot">vezes 2, depois mais 1</span></div>
+      <span class="seta" aria-hidden="true">→</span>
+      <div class="caixa"><span class="rot">Sai f(x)</span><strong id="maqOut">7</strong></div>
+    </div>
+
+    <div class="box teste">
+      <label for="maqX"><strong>Teste a máquina.</strong> Coloque um número e veja a conta:</label>
+      <div class="linha">
+        <input id="maqX" type="text" inputmode="decimal" value="3" autocomplete="off">
+      </div>
+      <p id="maqErr" class="erro" hidden>Digite um número, por exemplo 5 ou −2.</p>
+      <p class="conta" id="maqConta">f(3) = 2 · 3 + 1 = 6 + 1 = 7</p>
+    </div>
+
+    <div class="dica">
+      <span class="rotulo">Dica</span>
+      <p>Quando aparecer <span class="mat"><i>f</i>(5)</span>, por exemplo, é só <strong>trocar o x por 5</strong> e fazer a conta. Escrever <span class="mat"><i>f</i>(3) = 7</span> quer dizer: “quando entra 3, sai 7”.</p>
+    </div>
+  </section>
+
+  <!-- PARTE 2 -->
+  <section id="parte2" data-cor="blue">
+    <div class="cab">
+      <p class="eyebrow">Parte 2</p>
+      <h2>Função afim</h2>
+    </div>
+
+    <div class="bloco">
+      <p>Toda função que tem esta “cara” é uma função afim:</p>
+      <div class="formula"><i>f</i>(<i>x</i>) = <span class="k">a</span><i>x</i> + <span class="k">b</span></div>
+      <ul class="legenda">
+        <li><span class="letra">a</span><span>é o número que <strong>multiplica o x</strong> (está grudado nele)</span></li>
+        <li><span class="letra">b</span><span>é o número que <strong>está sozinho</strong></span></li>
+      </ul>
+      <p>O gráfico de uma função afim é <mark>sempre uma reta</mark>.</p>
+    </div>
+
+    <div class="bloco">
+      <h3>Um exemplo da vida real</h3>
+      <p>Uma corrida de aplicativo custa <strong>R$ 5 só para começar</strong>, mais <strong>R$ 2 por quilômetro</strong>. Então:</p>
+      <p class="conta" style="text-align:center">preço = 2 · (quilômetros) + 5 &nbsp;→&nbsp; <i>f</i>(<i>x</i>) = 2<i>x</i> + 5</p>
+      <div class="rolar">
+        <table class="tab">
+          <tbody>
+            <tr><th scope="row">Quilômetros (x)</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+            <tr><th scope="row">Conta</th><td class="mat">2·0 + 5</td><td class="mat">2·1 + 5</td><td class="mat">2·2 + 5</td><td class="mat">2·3 + 5</td><td class="mat">2·4 + 5</td></tr>
+            <tr><th scope="row">Preço em R$</th><td class="forte">5</td><td class="forte">7</td><td class="forte">9</td><td class="forte">11</td><td class="forte">13</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Repare: a cada quilômetro o preço sobe <strong>sempre R$ 2</strong>. Esse 2 é o <span class="k mat">a</span>. O 5 é o <span class="k mat">b</span>: é o que você paga mesmo andando 0 km.</p>
+      <figure class="graf">
+        <svg id="gTaxi" role="img" aria-label="Gráfico da função f(x) = 2x + 5, uma reta que começa em 5 e sobe 2 a cada quilômetro"></svg>
+        <figcaption><span>Ligando os pontos da tabela, sai uma reta.</span><span><span class="dot" style="background:var(--ink)"></span>onde começa (b = 5)</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="bloco">
+      <h3>Quem é o a e quem é o b?</h3>
+      <div class="rolar">
+        <table class="tab">
+          <thead><tr><th>Função</th><th>a</th><th>b</th></tr></thead>
+          <tbody>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = 3<i>x</i> + 4</td><td class="forte">3</td><td class="forte">4</td></tr>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = −<i>x</i> + 7</td><td class="forte">−1</td><td class="forte">7</td></tr>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = 5 − 2<i>x</i></td><td class="forte">−2</td><td class="forte">5</td></tr>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = 4<i>x</i></td><td class="forte">4</td><td class="forte">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cuidado">
+        <span class="rotulo">Cuidado</span>
+        <p>O sinal que vem <strong>antes</strong> do número vai junto com ele. Em <span class="mat"><i>f</i>(<i>x</i>) = 5 − 2<i>x</i></span>, o a é <strong>−2</strong> (e não 5), porque o a é sempre quem está grudado no x, mesmo que apareça no fim.</p>
+        <p>Se aparece só <span class="mat"><i>x</i></span>, o a é 1. Se aparece <span class="mat">−<i>x</i></span>, o a é −1. Se não tem número sozinho, o b é 0.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>A reta sobe ou desce?</h3>
+      <p>Quem decide é o <strong>sinal do a</strong>. Leia o gráfico da esquerda para a direita, como um texto:</p>
+      <div class="duo">
+        <div class="box">
+          <svg id="gSobe" role="img" aria-label="Reta subindo"></svg>
+          <h3>a positivo: sobe</h3>
+          <p class="muted">Chamamos de <strong>crescente</strong>. Ex.: <span class="mat"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span></p>
+        </div>
+        <div class="box">
+          <svg id="gDesce" role="img" aria-label="Reta descendo"></svg>
+          <h3>a negativo: desce</h3>
+          <p class="muted">Chamamos de <strong>decrescente</strong>. Ex.: <span class="mat"><i>f</i>(<i>x</i>) = −3<i>x</i> + 2</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>Onde a reta corta os eixos</h3>
+      <p><strong>No eixo y:</strong> a reta sempre corta no ponto <span class="mat">(0, <i>b</i>)</span>. É só trocar x por 0: <span class="mat"><i>f</i>(0) = <i>a</i> · 0 + <i>b</i> = <i>b</i></span>.</p>
+      <p><strong>No eixo x:</strong> esse ponto se chama <mark>zero da função</mark>. É o valor de x que faz a conta dar zero. Para achar, <strong>iguale a função a zero</strong> e resolva a equação.</p>
+      <ol class="passos">
+        <li><div><strong>Iguale a zero.</strong><p class="mat">2<i>x</i> − 6 = 0</p></div></li>
+        <li><div><strong>Passe o número sozinho para o outro lado, trocando o sinal.</strong><p class="mat">2<i>x</i> = 6</p></div></li>
+        <li><div><strong>Passe o número que multiplica o x dividindo.</strong><p class="mat"><i>x</i> = 6 ÷ 2 = 3</p></div></li>
+      </ol>
+      <p>Pronto: o zero de <span class="mat"><i>f</i>(<i>x</i>) = 2<i>x</i> − 6</span> é <strong>x = 3</strong>. A reta corta o eixo x no ponto <span class="mat">(3, 0)</span>.</p>
+      <figure class="graf">
+        <svg id="gZero" role="img" aria-label="Gráfico de f(x) = 2x − 6 cortando o eixo y em menos 6 e o eixo x em 3"></svg>
+        <figcaption><span><span class="dot" style="background:var(--ink)"></span>corta o eixo y (b)</span><span><span class="dot" style="background:var(--amber)"></span>zero da função</span></figcaption>
+      </figure>
+      <div class="dica">
+        <span class="rotulo">Dica</span>
+        <p>Existe um atalho: o zero é sempre <span class="mat"><i>x</i> = −<i>b</i> ÷ <i>a</i></span>. Mas resolver a equação como acima funciona sempre e é mais difícil de errar o sinal.</p>
+      </div>
+    </div>
+
+    <div class="voce">
+      <h3>Agora você</h3>
+      <div class="ex">
+        <p><span class="num">1.</span> Na função <span class="mat"><i>f</i>(<i>x</i>) = 4<i>x</i> − 8</span>: quem é o a e quem é o b? A reta sobe ou desce? Qual é o zero?</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>a = 4 e b = −8.</p>
+            <p>Como a é positivo, a reta <strong>sobe</strong>.</p>
+            <p class="mat">4<i>x</i> − 8 = 0 → 4<i>x</i> = 8 → <i>x</i> = 8 ÷ 4 = 2</p>
+            <p>O zero é <strong>x = 2</strong>.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">2.</span> Na função <span class="mat"><i>f</i>(<i>x</i>) = −3<i>x</i> + 9</span>: calcule <span class="mat"><i>f</i>(2)</span> e ache o zero.</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p class="mat"><i>f</i>(2) = −3 · 2 + 9 = −6 + 9 = 3</p>
+            <p class="mat">−3<i>x</i> + 9 = 0 → −3<i>x</i> = −9 → <i>x</i> = (−9) ÷ (−3) = 3</p>
+            <p>O zero é <strong>x = 3</strong>. E como a = −3 é negativo, a reta desce.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">3.</span> Uma academia cobra <strong>R$ 50 de matrícula</strong> e <strong>R$ 80 por mês</strong>. Escreva a função do total pago depois de x meses. Quanto a pessoa paga em 6 meses?</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>O que muda a cada mês é o 80 (esse é o a). O valor fixo é 50 (esse é o b).</p>
+            <p class="mat"><i>f</i>(<i>x</i>) = 80<i>x</i> + 50</p>
+            <p class="mat"><i>f</i>(6) = 80 · 6 + 50 = 480 + 50 = 530</p>
+            <p>Em 6 meses ela paga <strong>R$ 530</strong>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTE 3 -->
+  <section id="parte3" data-cor="green">
+    <div class="cab">
+      <p class="eyebrow">Parte 3</p>
+      <h2>Função quadrática</h2>
+    </div>
+
+    <div class="bloco">
+      <p>Agora o x aparece <strong>ao quadrado</strong> (<span class="mat"><i>x</i>²</span>). Isso muda tudo: o gráfico deixa de ser reta e vira uma curva chamada <mark>parábola</mark>.</p>
+      <div class="formula"><i>f</i>(<i>x</i>) = <span class="k">a</span><i>x</i>² + <span class="k">b</span><i>x</i> + <span class="k">c</span></div>
+      <ul class="legenda">
+        <li><span class="letra">a</span><span>multiplica o <strong>x²</strong></span></li>
+        <li><span class="letra">b</span><span>multiplica o <strong>x</strong></span></li>
+        <li><span class="letra">c</span><span>é o número que <strong>está sozinho</strong></span></li>
+      </ul>
+      <p>O <strong>a nunca pode ser zero</strong>. Sem o x², a função vira afim de novo.</p>
+      <p>Na vida real: quando você joga uma bola para cima, ela sobe, para lá no alto e desce. O caminho da bola tem o formato de uma parábola. A água de um chafariz também.</p>
+    </div>
+
+    <div class="bloco">
+      <h3>Quem é a, b e c?</h3>
+      <div class="rolar">
+        <table class="tab">
+          <thead><tr><th>Função</th><th>a</th><th>b</th><th>c</th></tr></thead>
+          <tbody>
+            <tr><td class="mat"><i>x</i>² − 5<i>x</i> + 6</td><td class="forte">1</td><td class="forte">−5</td><td class="forte">6</td></tr>
+            <tr><td class="mat">−2<i>x</i>² + 3<i>x</i> + 1</td><td class="forte">−2</td><td class="forte">3</td><td class="forte">1</td></tr>
+            <tr><td class="mat"><i>x</i>² − 9</td><td class="forte">1</td><td class="forte">0</td><td class="forte">−9</td></tr>
+            <tr><td class="mat">3<i>x</i>² + 6<i>x</i></td><td class="forte">3</td><td class="forte">6</td><td class="forte">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="dica">
+        <span class="rotulo">Dica</span>
+        <p>Se um pedaço <strong>não aparece</strong>, o número dele é <strong>0</strong>. Em <span class="mat"><i>x</i>² − 9</span> não tem “x sozinho”, então b = 0.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>Boca para cima ou para baixo?</h3>
+      <p>Quem decide é, de novo, o <strong>sinal do a</strong>. Esse “jeito” da curva se chama <strong>concavidade</strong>.</p>
+      <div class="duo">
+        <div class="box">
+          <svg id="gFeliz" role="img" aria-label="Parábola com a boca para cima"></svg>
+          <h3>a positivo: boca para cima</h3>
+          <p class="muted">Parece um sorriso. Tem um <strong>ponto mais baixo</strong> (mínimo).</p>
+        </div>
+        <div class="box">
+          <svg id="gTriste" role="img" aria-label="Parábola com a boca para baixo"></svg>
+          <h3>a negativo: boca para baixo</h3>
+          <p class="muted">Parece uma carinha triste. Tem um <strong>ponto mais alto</strong> (máximo).</p>
+        </div>
+      </div>
+      <p>E o <span class="k mat">c</span>? É onde a parábola corta o eixo y, no ponto <span class="mat">(0, <i>c</i>)</span>. Mesma ideia do b na função afim.</p>
+    </div>
+
+    <div class="bloco">
+      <h3>Desenhando com uma tabela</h3>
+      <p>Vamos montar o gráfico de <span class="mat"><i>f</i>(<i>x</i>) = <i>x</i>² − 4<i>x</i> + 3</span>. Para cada x, troque na fórmula e faça a conta:</p>
+      <div class="rolar">
+        <table class="tab">
+          <thead><tr><th>x</th><th>Conta</th><th>f(x)</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td class="mat">0² − 4·0 + 3 = 0 − 0 + 3</td><td class="forte">3</td></tr>
+            <tr><td>1</td><td class="mat">1² − 4·1 + 3 = 1 − 4 + 3</td><td class="forte">0</td></tr>
+            <tr><td>2</td><td class="mat">2² − 4·2 + 3 = 4 − 8 + 3</td><td class="forte">−1</td></tr>
+            <tr><td>3</td><td class="mat">3² − 4·3 + 3 = 9 − 12 + 3</td><td class="forte">0</td></tr>
+            <tr><td>4</td><td class="mat">4² − 4·4 + 3 = 16 − 16 + 3</td><td class="forte">3</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Olha que legal: os resultados se repetem como num espelho (<strong>3, 0, −1, 0, 3</strong>). A parábola é <mark>simétrica</mark>.</p>
+      <figure class="graf">
+        <svg id="gPara" role="img" aria-label="Parábola de f(x) = x² − 4x + 3 com raízes em 1 e 3 e vértice em 2, menos 1"></svg>
+        <figcaption><span><span class="dot" style="background:var(--ink)"></span>corta o eixo y (c = 3)</span><span><span class="dot" style="background:var(--amber)"></span>raízes</span><span><span class="dot" style="background:var(--violet)"></span>vértice e eixo de simetria</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="bloco">
+      <h3>Achando as raízes com Bhaskara</h3>
+      <p>As <mark>raízes</mark> (ou zeros) são os pontos onde a parábola corta o eixo x. Para achar, iguale a zero: <span class="mat"><i>ax</i>² + <i>bx</i> + <i>c</i> = 0</span>. Depois siga estes 4 passos. Vamos usar o mesmo exemplo, <span class="mat"><i>x</i>² − 4<i>x</i> + 3 = 0</span>.</p>
+      <ol class="passos">
+        <li><div>
+          <strong>Ache a, b e c.</strong>
+          <p class="mat"><i>a</i> = 1, &nbsp;<i>b</i> = −4, &nbsp;<i>c</i> = 3</p>
+        </div></li>
+        <li><div>
+          <strong>Calcule o delta (Δ).</strong>
+          <p>Δ é uma letra grega. Aqui ela é só o nome do resultado desta conta:</p>
+          <p class="mat">Δ = <i>b</i>² − 4 · <i>a</i> · <i>c</i></p>
+          <p class="mat">Δ = (−4)² − 4 · 1 · 3 = 16 − 12 = 4</p>
+        </div></li>
+        <li><div>
+          <strong>Olhe o delta.</strong>
+          <ul class="casos">
+            <li><span class="mat">Δ &gt; 0</span><span>duas raízes (a parábola corta o eixo x em 2 pontos)</span></li>
+            <li><span class="mat">Δ = 0</span><span>uma raiz só (a parábola só encosta no eixo x)</span></li>
+            <li><span class="mat">Δ &lt; 0</span><span>nenhuma raiz real (a parábola não toca o eixo x). Pode parar aqui.</span></li>
+          </ul>
+          <p>Aqui Δ = 4, que é positivo. Então vamos achar <strong>duas</strong> raízes.</p>
+        </div></li>
+        <li><div>
+          <strong>Use a fórmula de Bhaskara.</strong>
+          <p class="mat grande"><i>x</i> = <span class="frac"><span>−<i>b</i> ± √Δ</span><span>2<i>a</i></span></span></p>
+          <p class="mat"><i>x</i> = <span class="frac"><span>−(−4) ± √4</span><span>2 · 1</span></span> = <span class="frac"><span>4 ± 2</span><span>2</span></span></p>
+          <p>O “±” quer dizer: faça uma vez com <strong>+</strong> e outra com <strong>−</strong>.</p>
+          <p class="mat"><i>x</i>′ = (4 + 2) ÷ 2 = 6 ÷ 2 = 3</p>
+          <p class="mat"><i>x</i>″ = (4 − 2) ÷ 2 = 2 ÷ 2 = 1</p>
+        </div></li>
+      </ol>
+      <p>As raízes são <strong>1 e 3</strong>. Confira na tabela lá em cima: f(1) = 0 e f(3) = 0. Bateu!</p>
+      <div class="cuidado">
+        <span class="rotulo">Cuidado</span>
+        <p><span class="mat">(−4)² = (−4) · (−4) = 16</span>, que é <strong>positivo</strong>. Na calculadora, use parênteses.</p>
+        <p>Se b = −4, então <span class="mat">−<i>b</i> = −(−4) = +4</span>. Menos com menos dá mais.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>O vértice: o ponto da virada</h3>
+      <p>O <mark>vértice</mark> é onde a parábola faz a curva: o ponto mais baixo (boca para cima) ou o mais alto (boca para baixo). Ele tem duas coordenadas:</p>
+      <ol class="passos">
+        <li><div>
+          <strong>Ache o x do vértice.</strong>
+          <p class="mat"><i>x</i><sub>v</sub> = <span class="frac"><span>−<i>b</i></span><span>2<i>a</i></span></span> = <span class="frac"><span>−(−4)</span><span>2 · 1</span></span> = <span class="frac"><span>4</span><span>2</span></span> = 2</p>
+        </div></li>
+        <li><div>
+          <strong>Ache o y do vértice: coloque esse x na função.</strong>
+          <p class="mat"><i>y</i><sub>v</sub> = <i>f</i>(2) = 2² − 4 · 2 + 3 = 4 − 8 + 3 = −1</p>
+        </div></li>
+      </ol>
+      <p>O vértice é <strong>V = (2, −1)</strong>. Como a boca é para cima, −1 é o <strong>menor valor</strong> que essa função consegue dar.</p>
+      <div class="dica">
+        <span class="rotulo">Dica</span>
+        <p>O x do vértice fica <strong>bem no meio das raízes</strong>: (1 + 3) ÷ 2 = 2. Dá para usar isso para conferir a conta.</p>
+        <p>Alguns livros usam <span class="mat"><i>y</i><sub>v</sub> = −Δ ÷ 4<i>a</i></span>. Dá o mesmo resultado: −4 ÷ 4 = −1.</p>
+      </div>
+    </div>
+
+    <div class="voce">
+      <h3>Agora você</h3>
+      <div class="ex">
+        <p><span class="num">1.</span> Para <span class="mat"><i>f</i>(<i>x</i>) = <i>x</i>² − 6<i>x</i> + 8</span>: ache a, b e c, diga para onde é a boca, calcule as raízes e o vértice.</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>a = 1, b = −6, c = 8. Como a é positivo, a <strong>boca é para cima</strong>.</p>
+            <p class="mat">Δ = (−6)² − 4 · 1 · 8 = 36 − 32 = 4</p>
+            <p class="mat"><i>x</i> = (6 ± 2) ÷ 2 → <i>x</i>′ = 4 e <i>x</i>″ = 2</p>
+            <p class="mat"><i>x</i><sub>v</sub> = 6 ÷ 2 = 3 &nbsp; e &nbsp; <i>y</i><sub>v</sub> = <i>f</i>(3) = 9 − 18 + 8 = −1</p>
+            <p>Raízes: <strong>2 e 4</strong>. Vértice: <strong>(3, −1)</strong>. Repare que 3 está bem no meio de 2 e 4.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">2.</span> Para <span class="mat"><i>f</i>(<i>x</i>) = −<i>x</i>² + 4<i>x</i></span>: para onde é a boca? Quais são as raízes e o vértice?</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>a = −1, b = 4, c = 0. Como a é negativo, a <strong>boca é para baixo</strong>, então o vértice é o ponto mais alto.</p>
+            <p class="mat">Δ = 4² − 4 · (−1) · 0 = 16 − 0 = 16</p>
+            <p class="mat"><i>x</i> = (−4 ± 4) ÷ (2 · (−1)) = (−4 ± 4) ÷ (−2)</p>
+            <p class="mat"><i>x</i>′ = 0 ÷ (−2) = 0 &nbsp; e &nbsp; <i>x</i>″ = (−8) ÷ (−2) = 4</p>
+            <p class="mat"><i>x</i><sub>v</sub> = −4 ÷ (−2) = 2 &nbsp; e &nbsp; <i>y</i><sub>v</sub> = <i>f</i>(2) = −4 + 8 = 4</p>
+            <p>Raízes: <strong>0 e 4</strong>. Vértice: <strong>(2, 4)</strong>, o ponto mais alto.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">3.</span> A parábola de <span class="mat"><i>f</i>(<i>x</i>) = <i>x</i>² + 2<i>x</i> + 5</span> corta o eixo x? Descubra só calculando o delta.</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p class="mat">Δ = 2² − 4 · 1 · 5 = 4 − 20 = −16</p>
+            <p>Delta negativo: <strong>não tem raiz real</strong>. A parábola não toca o eixo x. Como a boca é para cima, ela fica toda acima do eixo.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTE 4 -->
+  <section id="parte4" data-cor="ink">
+    <div class="cab">
+      <p class="eyebrow">Parte 4</p>
+      <h2>Laboratório</h2>
+    </div>
+    <p>Mexa nos controles e veja o gráfico mudar na hora. Tente completar os 6 desafios lá embaixo.</p>
+
+    <div class="lab" id="lab">
+      <div class="modo" role="group" aria-label="Tipo de função">
+        <button id="modoAfim" type="button" aria-pressed="true">Reta (afim)</button>
+        <button id="modoQuad" type="button" aria-pressed="false">Parábola (quadrática)</button>
+      </div>
+      <p id="labEq">f(x) = 2x − 4</p>
+      <div class="ctrl"><label for="labA">a</label><input id="labA" type="range" min="-3" max="3" step="0.5" value="2"><output id="labAo" for="labA">2</output></div>
+      <div class="ctrl"><label for="labB">b</label><input id="labB" type="range" min="-6" max="6" step="1" value="-4"><output id="labBo" for="labB">−4</output></div>
+      <div class="ctrl" id="labCrow" hidden><label for="labC">c</label><input id="labC" type="range" min="-6" max="6" step="1" value="3"><output id="labCo" for="labC">3</output></div>
+      <figure class="graf" style="border:0;padding:0">
+        <svg id="labG" role="img" aria-label="Gráfico da função escolhida no laboratório"></svg>
+        <figcaption><span><span class="dot" style="background:var(--ink)"></span>corta o eixo y</span><span><span class="dot" style="background:var(--amber)"></span>zeros / raízes</span><span><span class="dot" style="background:var(--violet)"></span>vértice</span></figcaption>
+      </figure>
+      <div class="chips" id="labInfo"></div>
+    </div>
+
+    <div class="desafios">
+      <div>
+        <h3>Desafios com a reta</h3>
+        <ul>
+          <li id="c1"><span>Faça uma reta que desce</span><span class="st">A fazer</span></li>
+          <li id="c2"><span>Faça a reta passar pelo ponto (0, 0)</span><span class="st">A fazer</span></li>
+          <li id="c3"><span>Faça uma reta deitada, que não sobe nem desce</span><span class="st">A fazer</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Desafios com a parábola</h3>
+        <ul>
+          <li id="c4"><span>Faça uma parábola com a boca para baixo</span><span class="st">A fazer</span></li>
+          <li id="c5"><span>Faça uma parábola que não toca o eixo x</span><span class="st">A fazer</span></li>
+          <li id="c6"><span>Faça uma parábola que só encosta no eixo x em um ponto</span><span class="st">A fazer</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted" aria-live="polite"><span id="desCount">0</span> de 6 desafios feitos. <span id="parabens" hidden>Mandou bem, completou todos!</span></p>
+  </section>
+
+  <!-- PARTE 5 -->
+  <section id="parte5" data-cor="ink">
+    <div class="cab">
+      <p class="eyebrow">Parte 5</p>
+      <h2>Resumão para revisar</h2>
+    </div>
+    <div class="cola">
+      <div class="card" style="--c:var(--blue)">
+        <h3>Função afim</h3>
+        <dl>
+          <div><dt>Cara</dt><dd class="mat"><i>f</i>(<i>x</i>) = <i>ax</i> + <i>b</i></dd></div>
+          <div><dt>Gráfico</dt><dd>Reta</dd></div>
+          <div><dt>Sinal do a</dt><dd>a positivo: sobe. a negativo: desce.</dd></div>
+          <div><dt>Eixo y</dt><dd>Corta em (0, b)</dd></div>
+          <div><dt>Zero</dt><dd>Resolva <span class="mat"><i>ax</i> + <i>b</i> = 0</span> (ou <span class="mat"><i>x</i> = −<i>b</i> ÷ <i>a</i></span>)</dd></div>
+        </dl>
+      </div>
+      <div class="card" style="--c:var(--green)">
+        <h3>Função quadrática</h3>
+        <dl>
+          <div><dt>Cara</dt><dd class="mat"><i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i>, com <i>a</i> ≠ 0</dd></div>
+          <div><dt>Gráfico</dt><dd>Parábola</dd></div>
+          <div><dt>Sinal do a</dt><dd>a positivo: boca para cima (mínimo). a negativo: boca para baixo (máximo).</dd></div>
+          <div><dt>Eixo y</dt><dd>Corta em (0, c)</dd></div>
+          <div><dt>Raízes</dt><dd><span class="mat">Δ = <i>b</i>² − 4<i>ac</i></span>, depois <span class="mat"><i>x</i> = (−<i>b</i> ± √Δ) ÷ 2<i>a</i></span></dd></div>
+          <div><dt>Vértice</dt><dd><span class="mat"><i>x</i><sub>v</sub> = −<i>b</i> ÷ 2<i>a</i></span>, e <span class="mat"><i>y</i><sub>v</sub> = <i>f</i>(<i>x</i><sub>v</sub>)</span></dd></div>
+        </dl>
+      </div>
+    </div>
+    <div class="cuidado">
+      <span class="rotulo">Erros que mais caem na prova</span>
+      <ol class="erros">
+        <li>Pegar o a errado quando a função está fora de ordem. Em <span class="mat">5 − 2<i>x</i></span>, o a é −2.</li>
+        <li>Esquecer que <span class="mat">(−4)²</span> dá <strong>positivo</strong> (16).</li>
+        <li>Errar o sinal do <span class="mat">−<i>b</i></span>. Se b é negativo, −b fica positivo.</li>
+        <li>Achar que delta negativo é erro de conta. Ele só quer dizer que não tem raiz real.</li>
+        <li>Dividir só um pedaço pelo 2a. O traço da fração fica embaixo de <strong>tudo</strong>: de −b e de √Δ.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+</div>
+
+<canvas id="quadro" aria-hidden="true"></canvas>
+<div id="cursores" aria-hidden="true"></div>
+
+<div class="barra">
+  <p id="aviso" class="aviso" role="status" hidden></p>
+  <button type="button" id="btnSeguir" class="primario" hidden>Seguir o professor</button>
+
+  <div class="painel" id="painel" role="dialog" aria-labelledby="painelTitulo" hidden>
+    <div class="topo-painel">
+      <h3 id="painelTitulo">Aula ao vivo</h3>
+      <button type="button" class="ico" id="painelFechar" aria-label="Fechar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+    </div>
+
+    <div id="vivoSemConfig" class="grupo" hidden>
+      <p>A aula ao vivo funciona quando a página é aberta pelo endereço do site, como <strong>https://aula.seudominio.com</strong>. Aberta como arquivo no computador, só o desenho local funciona.</p>
+    </div>
+
+    <div id="vivoEntrar" class="grupo">
+      <p>Desenhem juntos, cada um no seu aparelho. Quem cria a aula é o professor e guia a rolagem da página.</p>
+      <div class="campo">
+        <label for="vivoNome">Seu nome</label>
+        <input id="vivoNome" type="text" maxlength="20" autocomplete="off" placeholder="Seu nome">
+      </div>
+      <button type="button" class="primario" id="vivoCriar">Criar aula</button>
+      <p class="ou">ou entre numa aula</p>
+      <div class="campo">
+        <label for="vivoCodigo">Código da aula</label>
+        <div class="linha">
+          <input id="vivoCodigo" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="K7Q2M">
+          <button type="button" id="vivoEntrarBtn">Entrar</button>
+        </div>
+      </div>
+      <p class="erro" id="vivoErro" hidden></p>
+    </div>
+
+    <div id="vivoSala" class="grupo" hidden>
+      <p class="status" id="vivoStatus">Conectando…</p>
+      <div>
+        <p class="muted" style="font-size:.85rem">Código da aula</p>
+        <p class="codigo" id="vivoCodigoAtual">-----</p>
+      </div>
+      <div class="campo">
+        <label for="vivoLink">Link para a outra pessoa entrar</label>
+        <div class="linha">
+          <input id="vivoLink" type="text" readonly>
+          <button type="button" id="vivoCopiar">Copiar</button>
+        </div>
+      </div>
+      <div class="campo">
+        <span class="rot">Na aula agora</span>
+        <div class="pessoas" id="vivoPessoas"></div>
+      </div>
+      <button type="button" id="vivoSair">Sair da aula</button>
+    </div>
+  </div>
+
+  <div class="pilula" role="toolbar" aria-label="Ferramentas de desenho">
+    <div class="kit" id="kit" hidden>
+      <button type="button" class="cor" data-tool="caneta" data-color="--blue" aria-label="Caneta azul" aria-pressed="true"><span style="background:var(--blue)"></span></button>
+      <button type="button" class="cor" data-tool="caneta" data-color="--green" aria-label="Caneta verde" aria-pressed="false"><span style="background:var(--green)"></span></button>
+      <button type="button" class="cor" data-tool="caneta" data-color="--red" aria-label="Caneta vermelha" aria-pressed="false"><span style="background:var(--red)"></span></button>
+      <button type="button" class="cor" data-tool="caneta" data-color="--ink" aria-label="Caneta preta" aria-pressed="false"><span style="background:var(--ink)"></span></button>
+      <button type="button" class="cor" data-tool="marca" aria-label="Marca-texto" aria-pressed="false"><span style="background:#FFD600;border-radius:4px;width:24px;height:14px"></span></button>
+      <button type="button" class="ico" data-tool="borracha" aria-label="Borracha" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 20H8.5l-4.21-4.3a1 1 0 0 1 0-1.41l10-10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41L11.5 20"/><path d="M18 13.3L11.7 7"/></svg></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" class="ico" id="desfazer" aria-label="Desfazer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
+      <button type="button" class="ico" id="limpar" aria-label="Apagar todos os desenhos"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></button>
+    </div>
+    <button type="button" class="principal" id="toggleDesenho" aria-pressed="false">
+      <svg id="icLapis" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4"/><path d="M13.5 6.5l4 4"/></svg>
+      <svg id="icOk" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M5 12l5 5L20 7"/></svg>
+      <span id="toggleTxt">Desenhar</span>
+    </button>
+    <button type="button" class="vivo" id="btnVivo" aria-expanded="false" aria-controls="painel">
+      <span class="ponto-vivo" aria-hidden="true"></span>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+      <span>Ao vivo</span>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  function fmt(n){
+    var r = Math.round(n*100)/100;
+    if (Object.is(r,-0)) r = 0;
+    return String(r).replace('.',',').replace('-','−');
+  }
+  function ponto(x,y){
+    var a = fmt(x), b = fmt(y);
+    var sep = (a.indexOf(',')>-1 || b.indexOf(',')>-1) ? '; ' : ', ';
+    return '(' + a + sep + b + ')';
+  }
+
+  function plot(svg, o){
+    var W = o.w || 440, H = o.h || 300, mini = !!o.mini;
+    var ml = mini?6:32, mr = mini?6:14, mt = mini?6:14, mb = mini?6:26;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    function sx(x){ return ml + (x-o.xmin)/(o.xmax-o.xmin)*(W-ml-mr); }
+    function sy(y){ return H - mb - (y-o.ymin)/(o.ymax-o.ymin)*(H-mt-mb); }
+    var s = '', cid = svg.id + '-clip';
+    s += '<defs><clipPath id="'+cid+'"><rect x="'+ml+'" y="'+mt+'" width="'+(W-ml-mr)+'" height="'+(H-mt-mb)+'"/></clipPath></defs>';
+    var xs = o.xstep || 1, ys = o.ystep || 1, x, y;
+    if (!o.nogrid){
+      for (x = Math.ceil(o.xmin/xs)*xs; x <= o.xmax+1e-9; x += xs) s += '<line x1="'+sx(x)+'" y1="'+mt+'" x2="'+sx(x)+'" y2="'+(H-mb)+'" class="g-grid"/>';
+      for (y = Math.ceil(o.ymin/ys)*ys; y <= o.ymax+1e-9; y += ys) s += '<line x1="'+ml+'" y1="'+sy(y)+'" x2="'+(W-mr)+'" y2="'+sy(y)+'" class="g-grid"/>';
+    }
+    var ax = (o.ymin<=0 && o.ymax>=0) ? sy(0) : sy(o.ymin);
+    var ay = (o.xmin<=0 && o.xmax>=0) ? sx(0) : sx(o.xmin);
+    s += '<line x1="'+ml+'" y1="'+ax+'" x2="'+(W-mr)+'" y2="'+ax+'" class="g-axis"/>';
+    s += '<line x1="'+ay+'" y1="'+mt+'" x2="'+ay+'" y2="'+(H-mb)+'" class="g-axis"/>';
+    if (!mini){
+      var xl = o.xlab || xs, yl = o.ylab || ys;
+      for (x = Math.ceil(o.xmin/xl)*xl; x <= o.xmax+1e-9; x += xl){
+        if (Math.abs(x)<1e-9 && o.xmin<0) continue;
+        s += '<text x="'+sx(x)+'" y="'+(ax+17)+'" class="g-lab" text-anchor="middle">'+fmt(x)+'</text>';
+      }
+      for (y = Math.ceil(o.ymin/yl)*yl; y <= o.ymax+1e-9; y += yl){
+        if (Math.abs(y)<1e-9) continue;
+        s += '<text x="'+(ay-6)+'" y="'+(sy(y)+4)+'" class="g-lab" text-anchor="end">'+fmt(y)+'</text>';
+      }
+      if (o.xname) s += '<text x="'+(W-mr)+'" y="'+(ax-7)+'" class="g-name" text-anchor="end">'+o.xname+'</text>';
+      if (o.yname) s += '<text x="'+(ay+7)+'" y="'+(mt+12)+'" class="g-name">'+o.yname+'</text>';
+    }
+    if (o.vline !== undefined && o.vline !== null && o.vline>=o.xmin && o.vline<=o.xmax){
+      s += '<line x1="'+sx(o.vline)+'" y1="'+mt+'" x2="'+sx(o.vline)+'" y2="'+(H-mb)+'" class="g-sim"/>';
+    }
+    (o.fns||[]).forEach(function(fn){
+      var d = '', on = false, n = 300;
+      for (var i=0;i<=n;i++){
+        var xx = o.xmin + (o.xmax-o.xmin)*i/n, yy = fn.f(xx);
+        if (isFinite(yy) && yy > o.ymin-50 && yy < o.ymax+50){
+          d += (on?'L':'M') + sx(xx).toFixed(1) + ' ' + sy(yy).toFixed(1) + ' ';
+          on = true;
+        } else on = false;
+      }
+      s += '<path d="'+d+'" clip-path="url(#'+cid+')" style="fill:none;stroke:'+fn.color+';stroke-width:'+(fn.w||3)+'px;stroke-linecap:round;stroke-linejoin:round"/>';
+    });
+    (o.points||[]).forEach(function(p){
+      if (p.x<o.xmin-1e-9 || p.x>o.xmax+1e-9 || p.y<o.ymin-1e-9 || p.y>o.ymax+1e-9) return;
+      s += '<circle cx="'+sx(p.x)+'" cy="'+sy(p.y)+'" r="'+(p.r||6)+'" style="fill:'+p.color+';stroke:var(--sheet);stroke-width:2px"/>';
+      if (p.label) s += '<text x="'+(sx(p.x)+(p.dx||0))+'" y="'+(sy(p.y)+(p.dy||0))+'" text-anchor="'+(p.anchor||'start')+'" class="g-pt">'+p.label+'</text>';
+    });
+    svg.innerHTML = s;
+  }
+
+  // Desenho do topo
+  plot(document.getElementById('heroG'), {w:320,h:260,mini:true,nogrid:true,xmin:-4,xmax:4,ymin:-3,ymax:4.5,
+    fns:[{f:function(x){return 0.7*x+0.6;},color:'var(--blue)',w:4},{f:function(x){return 0.55*x*x-2;},color:'var(--green)',w:4}]});
+
+  // Gráficos estáticos
+  plot(document.getElementById('gTaxi'), {xmin:0,xmax:6,ymin:0,ymax:18,ystep:2,xlab:1,ylab:2,xname:'km',yname:'R$',
+    fns:[{f:function(x){return 2*x+5;},color:'var(--blue)'}],
+    points:[{x:0,y:5,color:'var(--ink)',label:'começa em 5',dx:10,dy:-8},
+      {x:1,y:7,color:'var(--blue)',r:4.5},{x:2,y:9,color:'var(--blue)',r:4.5},{x:3,y:11,color:'var(--blue)',r:4.5},{x:4,y:13,color:'var(--blue)',r:4.5}]});
+  plot(document.getElementById('gZero'), {xmin:-2,xmax:6,ymin:-7,ymax:5,
+    fns:[{f:function(x){return 2*x-6;},color:'var(--blue)'}],
+    points:[{x:0,y:-6,color:'var(--ink)',label:'corta o y em −6',dx:12,dy:16},
+      {x:3,y:0,color:'var(--amber)',label:'zero: x = 3',dx:12,dy:20}]});
+  var miniOpt = function(f,c){ return {w:200,h:150,mini:true,xmin:-3,xmax:3,ymin:-2.25,ymax:2.25,fns:[{f:f,color:c}]}; };
+  plot(document.getElementById('gSobe'), miniOpt(function(x){return 0.65*x;},'var(--blue)'));
+  plot(document.getElementById('gDesce'), miniOpt(function(x){return -0.65*x;},'var(--blue)'));
+  plot(document.getElementById('gFeliz'), miniOpt(function(x){return 0.45*x*x-1.6;},'var(--green)'));
+  plot(document.getElementById('gTriste'), miniOpt(function(x){return -0.45*x*x+1.6;},'var(--green)'));
+  plot(document.getElementById('gPara'), {xmin:-1,xmax:5,ymin:-2,ymax:8,ylab:2,vline:2,
+    fns:[{f:function(x){return x*x-4*x+3;},color:'var(--green)'}],
+    points:[{x:0,y:3,color:'var(--ink)',label:'c = 3',dx:10,dy:-8},
+      {x:4,y:3,color:'var(--green)',r:4.5},
+      {x:1,y:0,color:'var(--amber)',label:'(1, 0)',dx:-10,dy:20,anchor:'end'},
+      {x:3,y:0,color:'var(--amber)',label:'(3, 0)',dx:10,dy:20},
+      {x:2,y:-1,color:'var(--violet)',label:'V = (2, −1)',dx:12,dy:5}]});
+
+  // Máquina
+  var mx = document.getElementById('maqX'), mIn = document.getElementById('maqIn'), mOut = document.getElementById('maqOut');
+  var mErr = document.getElementById('maqErr'), mConta = document.getElementById('maqConta');
+  function maquina(){
+    var raw = mx.value.trim().replace(',','.').replace('−','-');
+    if (raw === '' || isNaN(Number(raw))){
+      mErr.hidden = false; mIn.textContent = '?'; mOut.textContent = '?'; mConta.textContent = '';
+      return;
+    }
+    mErr.hidden = true;
+    var x = Number(raw), d = 2*x;
+    var px = x<0 ? '(' + fmt(x) + ')' : fmt(x);
+    mIn.textContent = fmt(x); mOut.textContent = fmt(d+1);
+    mConta.textContent = 'f(' + fmt(x) + ') = 2 · ' + px + ' + 1 = ' + fmt(d) + ' + 1 = ' + fmt(d+1);
+  }
+  mx.addEventListener('input', maquina);
+
+  // Laboratório
+  var st = {mode:'afim', done:{}};
+  var $ = function(id){ return document.getElementById(id); };
+  var A = $('labA'), B = $('labB'), C = $('labC');
+  function termo(coef, v, primeiro){
+    if (coef === 0) return '';
+    var neg = coef < 0, ab = Math.abs(coef);
+    var num = (ab === 1 && v) ? '' : fmt(ab);
+    return (neg ? (primeiro ? '−' : ' − ') : (primeiro ? '' : ' + ')) + num + v;
+  }
+  function equacao(a,b,c){
+    var s = '';
+    if (st.mode === 'quad'){ s += termo(a,'x²',s===''); s += termo(b,'x',s===''); s += termo(c,'',s===''); }
+    else { s += termo(a,'x',s===''); s += termo(b,'',s===''); }
+    return 'f(x) = ' + (s || '0');
+  }
+  function feito(id){
+    if (st.done[id]) return;
+    st.done[id] = true;
+    var li = $(id); li.classList.add('ok'); li.querySelector('.st').textContent = 'Feito';
+    var n = Object.keys(st.done).length;
+    $('desCount').textContent = n;
+    $('parabens').hidden = n < 6;
+  }
+  function lab(){
+    var a = Number(A.value), b = Number(B.value), c = Number(C.value);
+    var quad = st.mode === 'quad';
+    $('labAo').textContent = fmt(a); $('labBo').textContent = fmt(b); $('labCo').textContent = fmt(c);
+    $('labEq').textContent = equacao(a,b,c);
+    var f = quad ? function(x){ return a*x*x + b*x + c; } : function(x){ return a*x + b; };
+    var pts = [], chips = [], vline = null;
+    if (!quad){
+      pts.push({x:0,y:b,color:'var(--ink)'});
+      chips.push(['Direção', a>0 ? 'Sobe (crescente)' : a<0 ? 'Desce (decrescente)' : 'Deitada (constante)']);
+      chips.push(['Corta o eixo y', ponto(0,b)]);
+      if (a !== 0){ var r = -b/a; pts.push({x:r,y:0,color:'var(--amber)'}); chips.push(['Zero da função','x = '+fmt(r)]); }
+      else chips.push(['Zero da função', b===0 ? 'todo x' : 'não tem']);
+      if (a<0) feito('c1');
+      if (a!==0 && b===0) feito('c2');
+      if (a===0) feito('c3');
+    } else if (a === 0){
+      chips.push(['Atenção','Com a = 0 não tem x², então vira reta']);
+    } else {
+      var D = b*b - 4*a*c, xv = -b/(2*a), yv = f(xv);
+      pts.push({x:0,y:c,color:'var(--ink)'});
+      chips.push(['Boca', a>0 ? 'Para cima' : 'Para baixo']);
+      chips.push(['Delta','Δ = '+fmt(D)]);
+      if (D > 0){
+        var r1 = (-b-Math.sqrt(D))/(2*a), r2 = (-b+Math.sqrt(D))/(2*a);
+        pts.push({x:r1,y:0,color:'var(--amber)'},{x:r2,y:0,color:'var(--amber)'});
+        chips.push(['Raízes', fmt(Math.min(r1,r2)) + ' e ' + fmt(Math.max(r1,r2))]);
+      } else if (D === 0){
+        pts.push({x:xv,y:0,color:'var(--amber)'});
+        chips.push(['Raízes','só uma: x = '+fmt(xv)]);
+      } else chips.push(['Raízes','nenhuma (não toca o eixo x)']);
+      pts.push({x:xv,y:yv,color:'var(--violet)'});
+      chips.push(['Vértice', ponto(xv,yv)]);
+      vline = xv;
+      if (a<0) feito('c4');
+      if (D<0) feito('c5');
+      if (D===0) feito('c6');
+    }
+    plot($('labG'), {h:337,xmin:-8,xmax:8,ymin:-6,ymax:6,xlab:2,ylab:2,vline:vline,
+      fns:[{f:f,color: quad ? 'var(--green)' : 'var(--blue)'}], points:pts});
+    $('labInfo').innerHTML = chips.map(function(k){ return '<div class="chip"><span>'+k[0]+'</span><strong>'+k[1]+'</strong></div>'; }).join('');
+  }
+  function mostrarModo(m){
+    st.mode = m;
+    var quad = m === 'quad';
+    $('modoAfim').setAttribute('aria-pressed', String(!quad));
+    $('modoQuad').setAttribute('aria-pressed', String(quad));
+    $('lab').classList.toggle('quad', quad);
+    $('labCrow').hidden = !quad;
+  }
+  function modo(m){
+    mostrarModo(m);
+    if (m === 'quad'){ A.value = 1; B.value = -4; C.value = 3; } else { A.value = 2; B.value = -4; }
+    lab();
+  }
+
+  // Avisa a aula ao vivo quando alguém mexe no laboratório ou na máquina
+  function avisarLicao(tipo, dados){
+    document.dispatchEvent(new CustomEvent('licao', {detail:{tipo:tipo, dados:dados}}));
+  }
+  function estadoLab(){ return {mode:st.mode, a:Number(A.value), b:Number(B.value), c:Number(C.value)}; }
+
+  $('modoAfim').addEventListener('click', function(){ modo('afim'); avisarLicao('lab', estadoLab()); });
+  $('modoQuad').addEventListener('click', function(){ modo('quad'); avisarLicao('lab', estadoLab()); });
+  [A,B,C].forEach(function(el){ el.addEventListener('input', function(){ lab(); avisarLicao('lab', estadoLab()); }); });
+  mx.addEventListener('input', function(){ avisarLicao('maq', mx.value); });
+  modo('afim');
+
+  window.licao = {
+    estado: function(){ return {lab:estadoLab(), maq:mx.value}; },
+    aplicarLab: function(s){
+      if (!s || (s.mode !== 'afim' && s.mode !== 'quad')) return;
+      mostrarModo(s.mode);
+      A.value = s.a; B.value = s.b; C.value = s.c;
+      lab();
+    },
+    aplicarMaq: function(v){
+      if (typeof v !== 'string') return;
+      mx.value = v.slice(0, 12);
+      maquina();
+    }
+  };
+})();
+</script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var root = document.documentElement;
+  var cv = $('quadro'), ctx = cv.getContext('2d');
+  var mainEl = document.querySelector('main'), palco = $('palco');
+  var camadaCursores = $('cursores');
+  var LW = 400;                 /* largura da coluna no modo ao vivo, em px "da página" */
+  var LIMITE_MSG = 60000;       /* tamanho máximo (em caracteres) de cada mensagem de estado */
+
+  /* ---------------- estado ---------------- */
+  var strokes = [], acoes = [], atual = null, ativo = false, remotos = {};
+  var ferramenta = {tool:'caneta', color:'--blue'};
+  var dpr = 1, pend = false, pointers = new Map(), panning = false, lastPanY = 0;
+  var meuId = gerarId(10), seq = 0;
+  var aoVivo = false;
+  var TOOLS = {caneta:1, marca:1, borracha:1};
+  var CORES = {'--blue':1, '--green':1, '--red':1, '--ink':1};
+
+  function gerarId(n){
+    var abc = 'abcdefghijkmnpqrstuvwxyz23456789', out = '', buf = new Uint32Array(n);
+    (window.crypto || window.msCrypto).getRandomValues(buf);
+    for (var i = 0; i < n; i++) out += abc[buf[i] % abc.length];
+    return out;
+  }
+  function novoIdTraco(){ return meuId + '-' + (++seq); }
+  function r1(v){ return Math.round(v * 10) / 10; }
+
+  /* ---------------- avisos ---------------- */
+  var avisoEl = $('aviso'), avisoTimer = null;
+  function avisar(texto, ms){
+    avisoEl.textContent = texto;
+    avisoEl.hidden = false;
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(function(){ avisoEl.hidden = true; }, ms || 3500);
+  }
+
+  /* ---------------- geometria ---------------- */
+  function escala(r){ r = r || mainEl.getBoundingClientRect(); return aoVivo ? r.width / LW : 1; }
+  function paraPagina(cx, cy){
+    var r = mainEl.getBoundingClientRect(), s = escala(r);
+    return [(cx - r.left) / s, (cy - r.top) / s];
+  }
+  function ajustarPalco(){
+    if (!aoVivo){ palco.style.height = ''; root.style.removeProperty('--escala'); return; }
+    var disp = root.clientWidth - 32;
+    var s = Math.max(0.5, Math.min(disp / LW, 1.6));
+    root.style.setProperty('--escala', s.toFixed(4));
+    palco.style.height = Math.ceil(mainEl.offsetHeight * s) + 'px';
+  }
+  function ligarLayoutVivo(on){
+    aoVivo = on;
+    root.classList.toggle('ao-vivo', on);
+    ajustarPalco();
+    pedir();
+  }
+
+  /* ---------------- desenho ---------------- */
+  function escuro(){
+    var c = getComputedStyle(root).getPropertyValue('--paper').trim();
+    var m = /^#?([0-9a-f]{6})$/i.exec(c);
+    if (!m) return false;
+    var n = parseInt(m[1], 16);
+    return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 128;
+  }
+  function cores(){
+    var cs = getComputedStyle(root), o = {};
+    Object.keys(CORES).forEach(function(k){ o[k] = cs.getPropertyValue(k).trim(); });
+    return o;
+  }
+  function limites(st){
+    var mn = Infinity, mx = -Infinity;
+    for (var i = 0; i < st.pts.length; i++){ var y = st.pts[i][1]; if (y < mn) mn = y; if (y > mx) mx = y; }
+    st.minY = mn; st.maxY = mx;
+    return st;
+  }
+  function tracar(st, ox, oy, s, cor, dark){
+    var p = st.pts;
+    if (!p.length) return;
+    ctx.save();
+    ctx.lineWidth = st.w * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (st.tool === 'borracha'){ ctx.globalCompositeOperation = 'destination-out'; ctx.strokeStyle = 'rgba(0,0,0,1)'; }
+    else if (st.tool === 'marca'){ ctx.strokeStyle = dark ? 'rgba(255,214,0,0.32)' : 'rgba(255,214,0,0.42)'; }
+    else ctx.strokeStyle = cor[st.color] || '#1D5BD6';
+    ctx.beginPath();
+    var x0 = ox + p[0][0] * s, y0 = oy + p[0][1] * s;
+    ctx.moveTo(x0, y0);
+    if (p.length === 1) ctx.lineTo(x0 + 0.01, y0);
+    else {
+      for (var i = 1; i < p.length - 1; i++){
+        var xc = ox + (p[i][0] + p[i+1][0]) / 2 * s, yc = oy + (p[i][1] + p[i+1][1]) / 2 * s;
+        ctx.quadraticCurveTo(ox + p[i][0] * s, oy + p[i][1] * s, xc, yc);
+      }
+      var L = p[p.length - 1];
+      ctx.lineTo(ox + L[0] * s, oy + L[1] * s);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  function redesenhar(){
+    pend = false;
+    var r = mainEl.getBoundingClientRect(), s = escala(r);
+    posicionarCursores(r, s);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    var lista = strokes.slice();
+    Object.keys(remotos).forEach(function(k){ lista.push(remotos[k]); });
+    if (atual) lista.push(atual);
+    if (!lista.length) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var cor = cores(), dark = escuro(), H = window.innerHeight;
+    lista.forEach(function(st){
+      var m = st.w * s;
+      if (r.top + st.maxY * s < -m || r.top + st.minY * s > H + m) return;
+      tracar(st, r.left, r.top, s, cor, dark);
+    });
+  }
+  function pedir(){ if (!pend){ pend = true; requestAnimationFrame(redesenhar); } }
+  function tamanho(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(window.innerWidth * dpr);
+    cv.height = Math.round(window.innerHeight * dpr);
+    ajustarPalco();
+    redesenhar();
+  }
+  function media(){ var t = 0; pointers.forEach(function(v){ t += v; }); return t / pointers.size; }
+  function indice(id){ for (var i = 0; i < strokes.length; i++) if (strokes[i].id === id) return i; return -1; }
+
+  var enviados = 0, timerPts = null;
+  cv.addEventListener('pointerdown', function(e){
+    if (!ativo) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    pointers.set(e.pointerId, e.clientY);
+    try { cv.setPointerCapture(e.pointerId); } catch(_){}
+    if (pointers.size >= 2){
+      if (atual) enviar({t:'del', id:atual.id});
+      atual = null; panning = true; lastPanY = media(); pararDeSeguir(); pedir();
+      return;
+    }
+    if (panning) return;
+    var w = ferramenta.tool === 'marca' ? 20 : ferramenta.tool === 'borracha' ? 28 : 3.5;
+    var pt = paraPagina(e.clientX, e.clientY);
+    atual = {id:novoIdTraco(), tool:ferramenta.tool, color:ferramenta.color, w:w, pts:[pt], minY:pt[1], maxY:pt[1]};
+    enviados = 1;
+    enviar({t:'s0', id:atual.id, tool:atual.tool, color:atual.color, w:w, p:[r1(pt[0]), r1(pt[1])]});
+    pedir();
+  });
+  cv.addEventListener('pointermove', function(e){
+    if (!ativo || !pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, e.clientY);
+    if (panning){ var m = media(); window.scrollBy(0, lastPanY - m); lastPanY = m; return; }
+    if (!atual) return;
+    var evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+    if (!evs.length) evs = [e];
+    evs.forEach(function(ev){
+      var pt = paraPagina(ev.clientX, ev.clientY), last = atual.pts[atual.pts.length - 1];
+      if (Math.abs(pt[0] - last[0]) + Math.abs(pt[1] - last[1]) < 1.5) return;
+      atual.pts.push(pt);
+      if (pt[1] < atual.minY) atual.minY = pt[1];
+      if (pt[1] > atual.maxY) atual.maxY = pt[1];
+    });
+    agendarPontos();
+    pedir();
+  });
+  function agendarPontos(){
+    if (timerPts || !conectado) return;
+    timerPts = setTimeout(function(){
+      timerPts = null;
+      if (atual && atual.pts.length > enviados){
+        enviar({t:'sp', id:atual.id, pts:atual.pts.slice(enviados).map(function(p){ return [r1(p[0]), r1(p[1])]; })});
+        enviados = atual.pts.length;
+      }
+    }, 50);
+  }
+  function fim(e){
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size > 0){ if (panning) lastPanY = media(); return; }
+    if (panning){ panning = false; return; }
+    if (atual){
+      clearTimeout(timerPts); timerPts = null;
+      strokes.push(atual);
+      acoes.push({tipo:'add', id:atual.id});
+      enviar({t:'s1', st:compactar(atual)});
+      atual = null;
+      pedir();
+    }
+  }
+  cv.addEventListener('pointerup', fim);
+  cv.addEventListener('pointercancel', fim);
+
+  function compactar(st){
+    return {id:st.id, tool:st.tool, color:st.color, w:st.w, pts:st.pts.map(function(p){ return [r1(p[0]), r1(p[1])]; })};
+  }
+  function tracoValido(st){
+    if (!st || typeof st.id !== 'string' || st.id.length > 40 || !TOOLS[st.tool]) return null;
+    if (st.tool === 'caneta' && !CORES[st.color]) return null;
+    var w = Number(st.w);
+    if (!(w > 0 && w <= 40) || !Array.isArray(st.pts) || !st.pts.length || st.pts.length > 6000) return null;
+    var pts = [];
+    for (var i = 0; i < st.pts.length; i++){
+      var p = st.pts[i];
+      if (!Array.isArray(p) || !isFinite(p[0]) || !isFinite(p[1])) return null;
+      pts.push([Number(p[0]), Number(p[1])]);
+    }
+    return limites({id:st.id, tool:st.tool, color:st.tool === 'caneta' ? st.color : null, w:w, pts:pts});
+  }
+
+  function desfazer(){
+    while (acoes.length){
+      var a = acoes.pop();
+      if (a.tipo === 'add'){
+        var i = indice(a.id);
+        if (i < 0) continue;
+        strokes.splice(i, 1);
+        enviar({t:'del', id:a.id});
+        break;
+      }
+      if (a.tipo === 'limpar'){
+        var volta = a.antes.filter(function(st){ return indice(st.id) < 0; });
+        strokes = volta.concat(strokes);
+        enviarEmPartes(volta, function(parte, inicio){ return {t:'add', at:inicio, sts:parte}; });
+        break;
+      }
+    }
+    pedir();
+  }
+  function limpar(){
+    if (!strokes.length) return;
+    acoes.push({tipo:'limpar', antes:strokes});
+    strokes = [];
+    enviar({t:'clr'});
+    pedir();
+  }
+
+  /* ---------------- barra de ferramentas ---------------- */
+  var btnDesenho = $('toggleDesenho'), kit = $('kit');
+  function ligarDesenho(on){
+    ativo = on;
+    document.body.classList.toggle('desenhando', on);
+    kit.hidden = !on;
+    btnDesenho.setAttribute('aria-pressed', String(on));
+    $('toggleTxt').textContent = on ? 'Pronto' : 'Desenhar';
+    $('icLapis').hidden = on;
+    $('icOk').hidden = !on;
+    if (on){ fecharPainel(); avisar('Desenhe com o dedo ou o mouse. Para rolar a página, use dois dedos ou a rodinha do mouse.', 5000); }
+    else { avisoEl.hidden = true; pointers.clear(); atual = null; panning = false; pedir(); }
+  }
+  btnDesenho.addEventListener('click', function(){ ligarDesenho(!ativo); });
+  $('desfazer').addEventListener('click', desfazer);
+  $('limpar').addEventListener('click', limpar);
+  kit.querySelectorAll('[data-tool]').forEach(function(b){
+    b.addEventListener('click', function(){
+      ferramenta = {tool:b.getAttribute('data-tool'), color:b.getAttribute('data-color')};
+      kit.querySelectorAll('[data-tool]').forEach(function(o){ o.setAttribute('aria-pressed', String(o === b)); });
+      var c = ferramenta.color ? 'var(' + ferramenta.color + ')' : (ferramenta.tool === 'marca' ? '#FFD600' : 'var(--muted)');
+      document.body.style.setProperty('--pen-atual', c);
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ if (ativo) ligarDesenho(false); fecharPainel(); }
+    var alvo = e.target && e.target.tagName;
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && alvo !== 'INPUT' && (ativo || acoes.length)){ e.preventDefault(); desfazer(); }
+  });
+
+  /* ---------------- cursores das outras pessoas ---------------- */
+  var cursores = {};
+  function corDe(id){ var p = pessoas[id]; return p && p.papel === 'professor' ? 'var(--red)' : 'var(--violet)'; }
+  function nomeDe(id){ var p = pessoas[id]; return p ? p.nome : 'Visitante'; }
+  function moverCursor(id, x, y){
+    if (!isFinite(x) || !isFinite(y)) return;
+    var c = cursores[id];
+    if (!c){
+      var el = document.createElement('div');
+      el.className = 'cursor';
+      el.appendChild(document.createElement('i'));
+      el.appendChild(document.createElement('span'));
+      camadaCursores.appendChild(el);
+      c = cursores[id] = {el:el};
+    }
+    c.x = x; c.y = y; c.visto = Date.now();
+    c.el.style.setProperty('--c', corDe(id));
+    c.el.lastChild.textContent = nomeDe(id);
+    c.el.hidden = false;
+    pedir();
+  }
+  function posicionarCursores(r, s){
+    Object.keys(cursores).forEach(function(id){
+      var c = cursores[id];
+      if (c.el.hidden) return;
+      c.el.style.transform = 'translate(' + (r.left + c.x * s - 7).toFixed(1) + 'px,' + (r.top + c.y * s - 7).toFixed(1) + 'px)';
+    });
+  }
+  function removerCursor(id){ var c = cursores[id]; if (c){ c.el.remove(); delete cursores[id]; } }
+  setInterval(function(){
+    var agora = Date.now();
+    Object.keys(cursores).forEach(function(id){ if (!cursores[id].el.hidden && agora - cursores[id].visto > 4000) cursores[id].el.hidden = true; });
+  }, 1000);
+
+  /* ---------------- aula ao vivo (WebSocket com o servidor da aula) ---------------- */
+  var podeVivo = /^https?:$/.test(location.protocol);
+  var ws = null, conectado = false, sala = null, papel = null, meuNome = '';
+  var tentativas = 0, timerReconexao = null, ultimoRecebido = 0;
+  var pessoas = {}, primeiraSync = false;
+  var seguindo = false, centroProf = null, alvoRolagem = null, animando = false;
+  var pedidoAtual = null, recebendo = null, timerPedido = null, jaAvisouEntrada = false, conectouEm = 0;
+  var detalhes = Array.prototype.slice.call(mainEl.querySelectorAll('details'));
+
+  var painel = $('painel'), btnVivo = $('btnVivo'), btnSeguir = $('btnSeguir');
+  var nomeInput = $('vivoNome'), codigoInput = $('vivoCodigo'), erroEl = $('vivoErro');
+
+  function lerLocal(k){ try { return localStorage.getItem(k); } catch(_){ return null; } }
+  function gravarLocal(k, v){ try { localStorage.setItem(k, v); } catch(_){} }
+
+  function abrirPainel(){ painel.hidden = false; btnVivo.setAttribute('aria-expanded', 'true'); }
+  function fecharPainel(){ painel.hidden = true; btnVivo.setAttribute('aria-expanded', 'false'); }
+  btnVivo.addEventListener('click', function(){ if (painel.hidden){ if (ativo) ligarDesenho(false); abrirPainel(); } else fecharPainel(); });
+  $('painelFechar').addEventListener('click', fecharPainel);
+
+  function mostrarErro(t){ erroEl.textContent = t; erroEl.hidden = !t; }
+  function mostrarTela(){
+    $('vivoSemConfig').hidden = podeVivo;
+    $('vivoEntrar').hidden = !podeVivo || !!sala;
+    $('vivoSala').hidden = !sala;
+  }
+  function setStatus(t, cls){ var el = $('vivoStatus'); el.textContent = t; el.className = 'status' + (cls ? ' ' + cls : ''); }
+  function urlSala(c){ return location.href.split('#')[0].split('?')[0] + '?sala=' + c; }
+  function urlWs(){ return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'; }
+  function normalizarCodigo(v){ return (v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); }
+  function gerarCodigo(){
+    var abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', out = '', buf = new Uint32Array(5);
+    (window.crypto || window.msCrypto).getRandomValues(buf);
+    for (var i = 0; i < 5; i++) out += abc[buf[i] % abc.length];
+    return out;
+  }
+
+  function enviar(m){
+    if (!conectado || !ws || ws.readyState !== 1) return;
+    m.de = meuId;
+    try { ws.send(JSON.stringify({tipo:'msg', m:m})); } catch(_){}
+  }
+  function enviarEmPartes(lista, montar){
+    if (!conectado) return;
+    var parte = [], tam = 0, inicio = 0;
+    lista.forEach(function(st, i){
+      var c = compactar(st), t = JSON.stringify(c).length;
+      if (parte.length && tam + t > LIMITE_MSG){ enviar(montar(parte, inicio)); inicio = i; parte = []; tam = 0; }
+      parte.push(c); tam += t;
+    });
+    if (parte.length) enviar(montar(parte, inicio));
+  }
+
+  /* conexão com o servidor, com reconexão automática */
+  function conectar(){
+    clearTimeout(timerReconexao); timerReconexao = null;
+    if (!sala) return;
+    var meu;
+    try { meu = new WebSocket(urlWs()); } catch(_){ perdeuConexao(); return; }
+    ws = meu;
+    meu.onopen = function(){
+      if (ws !== meu) return;
+      ultimoRecebido = Date.now();
+      meu.send(JSON.stringify({tipo:'entrar', sala:sala, id:meuId, nome:meuNome, papel:papel}));
+    };
+    meu.onmessage = function(ev){
+      if (ws !== meu) return;
+      ultimoRecebido = Date.now();
+      var d;
+      try { d = JSON.parse(ev.data); } catch(_){ return; }
+      if (!d || typeof d !== 'object') return;
+      if (d.tipo === 'pessoas'){
+        atualizarPessoas(d.lista);
+        if (!conectado) aoConectar();
+      } else if (d.tipo === 'msg'){
+        try { receber(d.m); } catch(err){ console.warn(err); }
+      } else if (d.tipo === 'erro'){
+        setStatus(String(d.texto || 'O servidor recusou a entrada.').slice(0, 120), 'ruim');
+      }
+    };
+    meu.onclose = function(){ if (ws === meu){ ws = null; perdeuConexao(); } };
+    meu.onerror = function(){};
+  }
+  function aoConectar(){
+    conectado = true;
+    tentativas = 0;
+    root.classList.add('conectado');
+    conectouEm = Date.now();
+    setStatus(papel === 'professor' ? 'Ao vivo. Você é o professor.' : 'Ao vivo', 'ok');
+    pedirEstado();
+    if (papel === 'aluno' && !jaAvisouEntrada){
+      jaAvisouEntrada = true;
+      fecharPainel();
+      avisar('Você entrou na aula. A página vai acompanhar o professor.', 4000);
+    }
+  }
+  function perdeuConexao(){
+    conectado = false;
+    root.classList.remove('conectado');
+    if (!sala) return;
+    setStatus('Sem conexão. Tentando de novo…', 'ruim');
+    var espera = Math.min(10000, 800 * Math.pow(2, tentativas++));
+    clearTimeout(timerReconexao);
+    timerReconexao = setTimeout(conectar, espera);
+  }
+  function reconectarJa(){
+    if (sala && !ws){ tentativas = 0; conectar(); }
+  }
+  /* pulso: avisa o servidor que estamos aqui e percebe conexão morta (celular que dormiu, wi-fi que caiu) */
+  setInterval(function(){
+    if (!ws || ws.readyState !== 1) return;
+    if (Date.now() - ultimoRecebido > 45000){
+      var morto = ws; ws = null;
+      try { morto.close(); } catch(_){}
+      perdeuConexao();
+      return;
+    }
+    try { ws.send('{"tipo":"pulso"}'); } catch(_){}
+  }, 15000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) reconectarJa(); });
+  window.addEventListener('online', reconectarJa);
+
+  function entrar(codigo, comoProfessor){
+    if (!podeVivo){ mostrarTela(); abrirPainel(); return; }
+    if (sala) sair(true);
+    mostrarErro('');
+    sala = codigo;
+    papel = comoProfessor ? 'professor' : 'aluno';
+    meuNome = (nomeInput.value.trim() || (comoProfessor ? 'Professor' : 'Aluno')).slice(0, 20);
+    gravarLocal('aula-nome', meuNome);
+    if (comoProfessor) gravarLocal('aula-prof-' + codigo, '1');
+
+    strokes = []; acoes = []; remotos = {}; atual = null; pessoas = {}; primeiraSync = false;
+    Object.keys(cursores).forEach(removerCursor);
+    seguindo = !comoProfessor; centroProf = null; jaAvisouEntrada = false;
+    btnSeguir.hidden = true;
+    ligarLayoutVivo(true);
+
+    $('vivoCodigoAtual').textContent = codigo;
+    $('vivoLink').value = urlSala(codigo);
+    setStatus('Conectando…');
+    mostrarTela();
+    renderPessoas();
+    try { history.replaceState(null, '', urlSala(codigo)); } catch(_){}
+    tentativas = 0;
+    conectar();
+  }
+
+  function sair(trocando){
+    clearTimeout(timerReconexao); timerReconexao = null;
+    if (ws){ var w = ws; ws = null; try { w.close(1000); } catch(_){} }
+    conectado = false; sala = null; papel = null; seguindo = false; pedidoAtual = null;
+    root.classList.remove('conectado');
+    btnSeguir.hidden = true;
+    Object.keys(cursores).forEach(removerCursor);
+    pessoas = {};
+    if (trocando) return;
+    strokes = []; acoes = []; remotos = {}; atual = null;
+    ligarLayoutVivo(false);
+    try { history.replaceState(null, '', location.href.split('#')[0].split('?')[0]); } catch(_){}
+    mostrarTela();
+  }
+
+  $('vivoCriar').addEventListener('click', function(){ entrar(gerarCodigo(), true); });
+  function tentarEntrar(){
+    var c = normalizarCodigo(codigoInput.value);
+    codigoInput.value = c;
+    if (c.length !== 5){ mostrarErro('O código tem 5 letras ou números. Confira e tente de novo.'); codigoInput.focus(); return; }
+    entrar(c, lerLocal('aula-prof-' + c) === '1');
+  }
+  $('vivoEntrarBtn').addEventListener('click', tentarEntrar);
+  codigoInput.addEventListener('keydown', function(e){ if (e.key === 'Enter') tentarEntrar(); });
+  codigoInput.addEventListener('input', function(){ mostrarErro(''); });
+  $('vivoSair').addEventListener('click', function(){ sair(false); });
+  $('vivoCopiar').addEventListener('click', function(){
+    var campo = $('vivoLink'), texto = campo.value;
+    function selecionar(){ campo.focus(); campo.select(); avisar('Selecionei o link. Copie com Ctrl+C ou segurando o dedo.'); }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(texto).then(function(){ avisar('Link copiado. Mande para a outra pessoa.'); }, selecionar);
+    } else selecionar();
+  });
+
+  /* pessoas na aula (a lista vem do servidor) */
+  function atualizarPessoas(lista){
+    var novo = {};
+    (Array.isArray(lista) ? lista : []).forEach(function(p){
+      if (p && typeof p.id === 'string') novo[p.id] = {nome:String(p.nome || 'Visitante').slice(0, 20), papel:p.papel === 'professor' ? 'professor' : 'aluno'};
+    });
+    if (primeiraSync && Date.now() - conectouEm > 2000){
+      Object.keys(novo).forEach(function(k){ if (!pessoas[k] && k !== meuId) avisar(novo[k].nome + ' entrou na aula'); });
+      Object.keys(pessoas).forEach(function(k){ if (!novo[k] && k !== meuId){ avisar(pessoas[k].nome + ' saiu da aula'); removerCursor(k); } });
+    }
+    pessoas = novo;
+    primeiraSync = true;
+    renderPessoas();
+  }
+  function renderPessoas(){
+    var box = $('vivoPessoas');
+    box.textContent = '';
+    var ids = Object.keys(pessoas);
+    if (!ids.length){ var v = document.createElement('span'); v.className = 'muted'; v.textContent = 'Só você por enquanto'; box.appendChild(v); return; }
+    ids.sort(function(a, b){ return (pessoas[a].papel === 'professor' ? 0 : 1) - (pessoas[b].papel === 'professor' ? 0 : 1); });
+    ids.forEach(function(id){
+      var p = pessoas[id], el = document.createElement('span');
+      el.className = 'pessoa';
+      el.style.setProperty('--c', p.papel === 'professor' ? 'var(--red)' : 'var(--violet)');
+      el.textContent = p.nome + (p.papel === 'professor' ? ' (professor)' : '') + (id === meuId ? ' · você' : '');
+      box.appendChild(el);
+    });
+  }
+
+  /* estado para quem acabou de entrar */
+  function pedirEstado(){
+    pedidoAtual = gerarId(8);
+    recebendo = {partes:{}, n:0, extra:null};
+    enviar({t:'oi', pid:pedidoAtual});
+    clearTimeout(timerPedido);
+    timerPedido = setTimeout(function(){
+      if (pedidoAtual && Object.keys(pessoas).length > 1) enviar({t:'oi', pid:pedidoAtual});
+    }, 3000);
+  }
+  function souQuemResponde(quemPediu){
+    var ids = Object.keys(pessoas).filter(function(id){ return id !== quemPediu; });
+    if (ids.indexOf(meuId) < 0) ids.push(meuId);
+    var profs = ids.filter(function(id){ return pessoas[id] && pessoas[id].papel === 'professor'; }).sort();
+    if (profs.length) return profs[0] === meuId;
+    return ids.sort()[0] === meuId;
+  }
+  function responderEstado(pid, para){
+    var est = window.licao ? window.licao.estado() : {};
+    var extra = {
+      det:detalhes.map(function(d){ return d.open; }),
+      lab:est.lab || null,
+      maq:typeof est.maq === 'string' ? est.maq : null,
+      rol:papel === 'professor' ? r1(centroAtual()) : centroProf
+    };
+    var partes = [], parte = [], tam = 0;
+    strokes.forEach(function(st){
+      var c = compactar(st), t = JSON.stringify(c).length;
+      if (parte.length && tam + t > LIMITE_MSG){ partes.push(parte); parte = []; tam = 0; }
+      parte.push(c); tam += t;
+    });
+    partes.push(parte);
+    partes.forEach(function(p, k){ enviar({t:'est', pid:pid, para:para, k:k, n:partes.length, sts:p, extra:k === 0 ? extra : null}); });
+  }
+  function receberEstado(m){
+    if (m.para !== meuId || m.pid !== pedidoAtual || !recebendo) return;
+    if (!(m.n >= 1 && m.n < 500) || !(m.k >= 0 && m.k < m.n) || !Array.isArray(m.sts)) return;
+    recebendo.n = m.n;
+    recebendo.partes[m.k] = m.sts;
+    if (m.extra) recebendo.extra = m.extra;
+    if (Object.keys(recebendo.partes).length < recebendo.n) return;
+    var lista = [], vistos = {};
+    for (var k = 0; k < recebendo.n; k++){
+      (recebendo.partes[k] || []).forEach(function(st){ var v = tracoValido(st); if (v && !vistos[v.id]){ vistos[v.id] = 1; lista.push(v); } });
+    }
+    strokes.forEach(function(st){ if (!vistos[st.id]) lista.push(st); });
+    strokes = lista;
+    var ex = recebendo.extra || {};
+    if (Array.isArray(ex.det)) ex.det.forEach(function(o, i){ abrirDetalhe(i, !!o); });
+    if (ex.lab && window.licao) window.licao.aplicarLab(ex.lab);
+    if (typeof ex.maq === 'string' && window.licao) window.licao.aplicarMaq(ex.maq);
+    if (isFinite(ex.rol) && ex.rol !== null){ centroProf = Number(ex.rol); seguirPara(centroProf); }
+    pedidoAtual = null; recebendo = null; clearTimeout(timerPedido);
+    pedir();
+  }
+
+  /* mensagens recebidas */
+  function receber(m){
+    if (!m || typeof m !== 'object' || typeof m.de !== 'string' || m.de === meuId) return;
+    var de = m.de, st;
+    switch (m.t){
+      case 's0':
+        if (!Array.isArray(m.p)) return;
+        st = tracoValido({id:m.id, tool:m.tool, color:m.color, w:m.w, pts:[m.p]});
+        if (st){ remotos[st.id] = st; moverCursor(de, st.pts[0][0], st.pts[0][1]); }
+        break;
+      case 'sp':
+        st = remotos[m.id];
+        if (!st || !Array.isArray(m.pts) || st.pts.length + m.pts.length > 6000) return;
+        m.pts.forEach(function(p){
+          if (Array.isArray(p) && isFinite(p[0]) && isFinite(p[1])){
+            st.pts.push([Number(p[0]), Number(p[1])]);
+            if (p[1] < st.minY) st.minY = Number(p[1]);
+            if (p[1] > st.maxY) st.maxY = Number(p[1]);
+          }
+        });
+        var ult = st.pts[st.pts.length - 1];
+        moverCursor(de, ult[0], ult[1]);
+        break;
+      case 's1':
+        st = tracoValido(m.st);
+        if (!st) return;
+        delete remotos[st.id];
+        if (indice(st.id) < 0) strokes.push(st);
+        break;
+      case 'del':
+        delete remotos[m.id];
+        var i = indice(m.id);
+        if (i > -1) strokes.splice(i, 1);
+        break;
+      case 'clr':
+        strokes = []; remotos = {};
+        break;
+      case 'add':
+        if (!Array.isArray(m.sts)) return;
+        var novos = m.sts.map(tracoValido).filter(function(s){ return s && indice(s.id) < 0; });
+        var at = Math.max(0, Math.min(strokes.length, Number(m.at) || 0));
+        Array.prototype.splice.apply(strokes, [at, 0].concat(novos));
+        break;
+      case 'cur':
+        moverCursor(de, Number(m.x), Number(m.y));
+        return;
+      case 'rol':
+        if (!pessoas[de] || pessoas[de].papel !== 'professor' || !isFinite(m.c)) return;
+        centroProf = Number(m.c);
+        seguirPara(centroProf);
+        return;
+      case 'det':
+        abrirDetalhe(Number(m.i), !!m.o);
+        return;
+      case 'lab':
+        if (window.licao) window.licao.aplicarLab(m.s);
+        return;
+      case 'maq':
+        if (window.licao) window.licao.aplicarMaq(m.v);
+        return;
+      case 'oi':
+        if (typeof m.pid === 'string' && souQuemResponde(de)) responderEstado(m.pid, de);
+        return;
+      case 'est':
+        receberEstado(m);
+        return;
+      default:
+        return;
+    }
+    pedir();
+  }
+
+  /* respostas abertas e fechadas */
+  detalhes.forEach(function(d, i){
+    d.addEventListener('toggle', function(){
+      if (d._remoto){ d._remoto = false; return; }
+      enviar({t:'det', i:i, o:d.open});
+    });
+  });
+  function abrirDetalhe(i, aberto){
+    var d = detalhes[i];
+    if (!d || d.open === aberto) return;
+    d._remoto = true;
+    d.open = aberto;
+  }
+
+  /* laboratório e máquina */
+  document.addEventListener('licao', function(e){
+    var d = e.detail || {};
+    if (d.tipo === 'lab') enviar({t:'lab', s:d.dados});
+    else if (d.tipo === 'maq') enviar({t:'maq', v:d.dados});
+  });
+
+  /* apontador: mostra para os outros onde você está apontando */
+  var ultimoCur = 0;
+  document.addEventListener('pointermove', function(e){
+    if (!conectado || atual) return;
+    var agora = Date.now();
+    if (agora - ultimoCur < 80) return;
+    ultimoCur = agora;
+    var p = paraPagina(e.clientX, e.clientY);
+    enviar({t:'cur', x:r1(p[0]), y:r1(p[1])});
+  }, {passive:true});
+
+  /* rolagem: o professor guia, quem é aluno acompanha */
+  var reduzir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function centroAtual(){ var r = mainEl.getBoundingClientRect(); return (window.innerHeight / 2 - r.top) / escala(r); }
+  var timerRol = null;
+  function avisarRolagem(){
+    if (!conectado || papel !== 'professor' || timerRol) return;
+    timerRol = setTimeout(function(){ timerRol = null; enviar({t:'rol', c:r1(centroAtual())}); }, 120);
+  }
+  function seguirPara(centro){
+    if (!seguindo || papel !== 'aluno') return;
+    var r = mainEl.getBoundingClientRect();
+    var alvo = window.scrollY + r.top + centro * escala(r) - window.innerHeight / 2;
+    var max = root.scrollHeight - window.innerHeight;
+    alvoRolagem = Math.max(0, Math.min(max, alvo));
+    if (reduzir){ window.scrollTo(0, alvoRolagem); alvoRolagem = null; return; }
+    if (animando) return;
+    animando = true;
+    var antes = null;
+    (function passo(){
+      if (alvoRolagem === null || !seguindo){ animando = false; return; }
+      var y = window.scrollY, d = alvoRolagem - y;
+      if (Math.abs(d) < 1 || y === antes){ window.scrollTo(0, alvoRolagem); alvoRolagem = null; animando = false; return; }
+      antes = y;
+      window.scrollTo(0, y + d * 0.25);
+      requestAnimationFrame(passo);
+    })();
+  }
+  function pararDeSeguir(){
+    if (!seguindo || papel !== 'aluno') return;
+    seguindo = false;
+    alvoRolagem = null;
+    btnSeguir.hidden = false;
+  }
+  btnSeguir.addEventListener('click', function(){
+    seguindo = true;
+    btnSeguir.hidden = true;
+    if (centroProf !== null) seguirPara(centroProf);
+  });
+  window.addEventListener('wheel', pararDeSeguir, {passive:true});
+  window.addEventListener('touchmove', function(e){
+    if (e.target === cv && e.touches.length < 2) return;
+    if (e.target && e.target.closest && e.target.closest('.barra, .rolar')) return;
+    pararDeSeguir();
+  }, {passive:true});
+  window.addEventListener('keydown', function(e){
+    if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].indexOf(e.key) > -1 && !(e.target && /INPUT|TEXTAREA|SELECT|BUTTON|SUMMARY/.test(e.target.tagName))) pararDeSeguir();
+  });
+  document.querySelectorAll('.mapa a').forEach(function(a){ a.addEventListener('click', pararDeSeguir); });
+
+  /* ---------------- ligações gerais ---------------- */
+  window.addEventListener('scroll', function(){ pedir(); avisarRolagem(); }, {passive:true});
+  window.addEventListener('resize', tamanho);
+  if (window.ResizeObserver) new ResizeObserver(function(){ ajustarPalco(); pedir(); }).observe(mainEl);
+  try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', pedir); } catch(_){}
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ ajustarPalco(); pedir(); });
+
+  /* entrada pelo link (?sala=CODIGO) */
+  nomeInput.value = lerLocal('aula-nome') || '';
+  mostrarTela();
+  renderPessoas();
+  tamanho();
+  var codigoUrl = normalizarCodigo(new URLSearchParams(location.search).get('sala'));
+  if (codigoUrl.length === 5){
+    codigoInput.value = codigoUrl;
+    if (podeVivo && nomeInput.value) entrar(codigoUrl, lerLocal('aula-prof-' + codigoUrl) === '1');
+    else { abrirPainel(); if (podeVivo) nomeInput.focus(); }
+  }
+
+  /* usado só nos testes automáticos */
+  window.__aula = {receber:receber, estado:function(){ return {strokes:strokes, pessoas:pessoas, conectado:conectado, sala:sala, papel:papel, seguindo:seguindo, aoVivo:aoVivo}; }};
+})();
+</script>
+</body>
+</html>
