@@ -3,7 +3,7 @@ services:
   # Quem recebe as visitas e cuida do HTTPS é o Traefik que já roda na VPS;
   # as etiquetas (labels) abaixo avisam o Traefik qual subdomínio vem para cá.
   app:
-    build: .
+    build: ./app
     restart: unless-stopped
     expose:
       - "8080"
