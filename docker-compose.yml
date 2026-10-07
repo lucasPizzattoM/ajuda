@@ -1,0 +1,30 @@
+services:
+  # Servidor da aula em PHP: entrega a página e repassa os desenhos em tempo real.
+  app:
+    build: ./app
+    restart: unless-stopped
+    # Não fica aberto para a internet: quem recebe as visitas é o Caddy, logo abaixo.
+    expose:
+      - "8080"
+
+  # Caddy: recebe o subdomínio, cria e renova o certificado HTTPS sozinho
+  # e encaminha tudo para o app (inclusive a conexão ao vivo em /ws).
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      - DOMINIO=${DOMINIO:?Defina DOMINIO no arquivo .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

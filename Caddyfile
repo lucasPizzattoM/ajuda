@@ -1,0 +1,12 @@
+{$DOMINIO} {
+	# Conexão ao vivo (WebSocket): vai direto para o app, sem compressão
+	handle /ws {
+		reverse_proxy app:8080
+	}
+
+	# Página: comprimida para carregar rápido no celular
+	handle {
+		encode gzip
+		reverse_proxy app:8080
+	}
+}
