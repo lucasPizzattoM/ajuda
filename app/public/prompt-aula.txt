@@ -1,0 +1,79 @@
+Crie uma aula em HTML para a Lousa ao vivo, uma plataforma onde professor e alunos abrem o mesmo documento, cada um no seu aparelho, desenham por cima e acompanham juntos em tempo real.
+
+## A aula
+- Matéria: {{MATERIA}}
+- Tema: {{TEMA}}
+- Para quem: {{PUBLICO}}
+- Modelo de aula: {{MODELO}}
+- Observações: {{OBSERVACOES}}
+
+Se algum campo acima estiver entre colchetes, escolha o que fizer mais sentido para o tema e diga em uma linha o que escolheu.
+
+## O que entregar
+Um único arquivo .html completo (com <!doctype html>, CSS e JavaScript dentro dele), pronto para salvar e importar na plataforma. Fora o arquivo, escreva no máximo três linhas sobre o que a aula cobre.
+
+## Como ensinar
+- Fale com o público indicado: vocabulário, exemplos e dificuldade certos para essa idade ou série.
+- Bem mastigado: frases curtas, um conceito por vez, do concreto para o abstrato.
+- Para cada conceito: o que é, um exemplo do dia a dia, como reconhecer e o erro mais comum.
+- Mostre exemplos resolvidos passo a passo antes de pedir exercícios.
+- Exercícios em ordem de dificuldade (fácil, médio e um problema do dia a dia), sempre com a resposta escondida e a resolução explicada.
+- Termine com um resumão e com os erros que mais caem na prova.
+- Confira cada fato, data, nome, conta e resposta antes de entregar. Não invente: se não tiver certeza de algo, deixe de fora.
+
+## Estrutura (adapte ao modelo de aula)
+1. Topo: "Matéria · Público" em letras pequenas, o título, uma frase do que a pessoa vai conseguir fazer no fim, a pergunta que a aula responde e um índice com links para cada parte.
+2. De 3 a 6 partes numeradas, cada uma em <section id="parte1">, <section id="parte2">..., com o rótulo "Parte N" e um título.
+3. Prática ("Agora você") e um teste rápido.
+4. Resumão e erros comuns.
+
+## Componentes (use os que servirem ao tema e repita à vontade)
+- destaque: fórmula, regra, definição ou citação que precisa ser lembrada.
+- termos: explica as partes de uma fórmula, de uma palavra ou de um esquema.
+- ideia-chave: a frase mais importante de uma parte.
+- dica: atalho, truque de memória ou jeito rápido de conferir.
+- cuidado: erro comum ou pegadinha.
+- passo a passo: passos numerados de uma resolução, método ou procedimento.
+- tabela: dados, classificações ou valores (dentro de um bloco com rolagem horizontal).
+- figura: SVG desenhado no próprio arquivo (gráfico, ciclo, esquema, diagrama, mapa simples) com legenda. Desenhe na escala certa: tudo que a figura mostra tem que estar correto.
+- comparação: dois ou três conceitos lado a lado.
+- linha do tempo: fatos em ordem, etapas de um processo, enredo de uma obra.
+- vocabulário: termos e significados em palavras simples.
+- laboratório: um controle (slider, campo ou seletor) que muda um resultado na hora, para explorar uma relação do tema.
+- exercícios: enunciado e a resolução dentro de <details><summary>Ver resposta</summary>...</details>.
+- quiz: múltipla escolha com <input type="radio">, botão "Conferir" e explicação da resposta.
+- resumão: cartões com o essencial para revisar.
+
+## Modelos de aula
+- Aula completa: explicação, exemplos, prática e resumão. É o padrão.
+- Revisão para prova: começa pelo resumão, depois erros comuns e muitos exercícios graduados com resolução.
+- Lista de exercícios: pouca teoria e de 8 a 15 exercícios, do fácil ao difícil, todos resolvidos.
+- Laboratório interativo: a aula gira em torno de uma ou mais simulações com controles para mexer.
+- Linha do tempo: o conteúdo contado em ordem (história, literatura, evolução, processos).
+- Comparação de conceitos: dois ou mais conceitos parecidos, com quadro comparativo e como diferenciar.
+- Estudo de caso: parte de uma situação real e resolve junto, etapa por etapa.
+- Leitura guiada: um texto curto (de domínio público ou escrito por você) com vocabulário e perguntas de interpretação.
+- Vocabulário e idioma: palavras e expressões, exemplos de uso, pronúncia aproximada e exercícios.
+- Quiz: muitas perguntas de múltipla escolha, cada uma com a explicação da resposta.
+Se o modelo pedido não estiver nesta lista, monte a estrutura que melhor serve a ele.
+
+## Regras técnicas da plataforma (obrigatórias)
+- Um arquivo só. Nada de arquivos externos, exceto fontes do Google Fonts e imagens por https:// de endereços estáveis. Prefira figuras em SVG no próprio arquivo.
+- Página que rola, em uma coluna (largura máxima de uns 46rem e 16px de margem nas laterais), pensada para tela de celular (430px de largura) e que também funcione em telas largas.
+- Não use height: 100vh, position: fixed ou sticky, blocos com rolagem própria (overflow: auto em áreas altas), scroll-snap nem layout em slides.
+- Interação só com elementos nativos, que a plataforma sincroniza sozinha entre todos os aparelhos: <details>/<summary> para respostas, <input>, <select>, <textarea> e <button>. Dê um id único a cada controle importante.
+- Os links do índice são âncoras internas (href="#parte2").
+- Não dependa de localStorage, cookies, alert(), confirm() ou prompt().
+- Se a aula tiver algum estado que não fica guardado em campos (por exemplo, quais quizzes já foram conferidos ou qual modo está ativo), exponha esse estado assim, para quem entrar no meio da aula receber tudo igual:
+  window.aulaEstado = { obter: function(){ return { /* estado */ }; }, aplicar: function(estado){ /* refaz a tela */ } };
+- JavaScript dentro de (function(){ ... })(), sem erros no console.
+- Cores em variáveis CSS no :root, com modo escuro em @media (prefers-color-scheme: dark), e uma cor de destaque que combine com a matéria.
+- Acessível: bom contraste, texto de no mínimo 16px, foco visível e SVG com role="img" e aria-label.
+- Português do Brasil, exceto o conteúdo em outra língua numa aula de idioma.
+
+## Antes de entregar, confira
+- Fatos, datas, nomes, contas e respostas (dos exercícios e do quiz) estão corretos.
+- Cada exercício tem a resolução completa e cada quiz tem a resposta certa definida.
+- Cada link do índice leva para a parte certa.
+- Não sobrou nenhum texto de exemplo do modelo (os textos entre colchetes).
+- O arquivo abre sozinho no navegador, sem erros.

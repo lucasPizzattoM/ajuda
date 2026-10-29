@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo de aula</title>
+<!--
+  MODELO DE AULA · Lousa ao vivo
+  Um arquivo só, para qualquer matéria. Para criar uma aula:
+    1. Troque o conteúdo entre [colchetes].
+    2. Troque --acento (cor da matéria) no :root, se quiser.
+    3. Apague os componentes que não usar e repita os que precisar.
+  Cada componente está marcado com um comentário COMPONENTE.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Uma coluna de leitura sobre papel quadriculado. A cor da matéria fica em --acento. */
+:root{
+  --acento:#1D5BD6; --acento-bg:#E7EEFC;          /* troque pela cor da matéria */
+  --paper:#F7F9FC; --paper-grid:#E6ECF5; --sheet:#FFFFFF; --ink:#18202F; --muted:#586379;
+  --line:#D8DFEA; --line-strong:#B5C0D2;
+  --ok:#0F7A57; --ok-bg:#E1F3EA; --erro:#C42F3E; --erro-bg:#FCEBEC; --marker:#FFE97A;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-math:"STIX Two Text","Cambria Math",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --acento:#8AB0FA; --acento-bg:#18284A;
+    --paper:#0F131A; --paper-grid:#171D27; --sheet:#151B24; --ink:#E7ECF4; --muted:#9BA6B8;
+    --line:#283242; --line-strong:#3C495D;
+    --ok:#5CD3A6; --ok-bg:#123228; --erro:#FF8B93; --erro-bg:#3B1A1E; --marker:#5B4A06;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;padding-inline:16px;background-color:var(--paper);color:var(--ink);
+  background-image:linear-gradient(var(--paper-grid) 1px,transparent 1px),linear-gradient(90deg,var(--paper-grid) 1px,transparent 1px);
+  background-size:28px 28px;font:400 1.0625rem/1.65 var(--f-body)}
+main{max-width:46rem;margin:0 auto;padding-block:2rem 4rem;display:flex;flex-direction:column;gap:3.5rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.12}
+h1{font-weight:800;font-size:clamp(2.2rem,8vw,3.3rem);letter-spacing:-.02em}
+h2{font-weight:800;font-size:clamp(1.8rem,5.5vw,2.4rem);letter-spacing:-.015em}
+h3{font-weight:600;font-size:1.25rem}
+p{margin:0}
+a{color:inherit}
+mark{background:var(--marker);color:var(--ink);padding:0 .15em;border-radius:3px}
+:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.mat{font-family:var(--f-math);font-size:1.12em}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.rotulo{align-self:flex-start;font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+ul.lista,ol.lista{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:.35rem}
+
+/* Topo */
+.topo{display:flex;flex-direction:column;gap:1rem}
+.lead{font-size:1.15rem;color:var(--muted)}
+.pergunta{border-left:4px solid var(--acento);padding:.2rem 0 .2rem 1rem;font:600 1.2rem/1.4 var(--f-display)}
+.mapa{display:flex;flex-wrap:wrap;gap:.5rem}
+.mapa a{text-decoration:none;font-size:.92rem;font-weight:700;padding:.35rem .8rem;border:1.5px solid var(--line-strong);border-radius:999px;background:var(--sheet)}
+
+/* Partes */
+section{display:flex;flex-direction:column;gap:1.4rem;scroll-margin-top:1rem}
+.cab{display:flex;flex-direction:column;gap:.4rem;border-bottom:3px solid var(--acento);padding-bottom:.75rem}
+.cab .eyebrow{color:var(--acento)}
+.bloco{display:flex;flex-direction:column;gap:.85rem}
+.caixa{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.6rem}
+
+/* Componentes de destaque */
+.destaque{font-family:var(--f-math);font-size:clamp(1.6rem,6vw,2.3rem);text-align:center;padding:1rem 1.2rem;background:var(--sheet);border:2px solid var(--acento);border-radius:14px;line-height:1.3}
+.destaque.texto{font:600 1.25rem/1.45 var(--f-display);text-align:left}
+.destaque small{display:block;font:400 .9rem var(--f-body);color:var(--muted);margin-top:.4rem}
+.ideia{background:var(--acento-bg);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.ideia .rotulo{color:var(--acento)}
+.dica{background:var(--sheet);border:1.5px dashed var(--line-strong);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.dica .rotulo{background:var(--marker);color:var(--ink);padding:.1rem .45rem;border-radius:3px}
+.cuidado{background:var(--erro-bg);border:2px solid var(--erro);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.cuidado .rotulo{color:var(--erro)}
+.termos{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.termos li{display:flex;gap:.75rem;align-items:baseline}
+.termo{flex:none;min-width:2rem;height:2rem;padding:0 .5rem;border-radius:999px;background:var(--acento-bg);color:var(--acento);display:inline-flex;align-items:center;justify-content:center;font:700 .95rem var(--f-body)}
+
+/* Passo a passo */
+ol.passos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.85rem;counter-reset:p}
+ol.passos>li{counter-increment:p;display:grid;grid-template-columns:2.4rem minmax(0,1fr);gap:.9rem;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem}
+ol.passos>li::before{content:counter(p);width:2.4rem;height:2.4rem;border-radius:50%;background:var(--acento);color:var(--sheet);display:flex;align-items:center;justify-content:center;font:800 1.15rem var(--f-display)}
+ol.passos>li>div{display:flex;flex-direction:column;gap:.4rem;min-width:0}
+
+/* Tabela */
+.rolar{overflow-x:auto;max-width:100%}
+table.tab{border-collapse:collapse;background:var(--sheet);border:1px solid var(--line);min-width:100%;font-variant-numeric:tabular-nums}
+.tab th,.tab td{padding:.55rem .8rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tab th{font-size:.85rem;color:var(--muted)}
+.tab tr:last-child td{border-bottom:0}
+
+/* Figura */
+figure.fig{margin:0;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;gap:.5rem}
+figure.fig svg{width:100%;height:auto;display:block}
+figcaption{font-size:.9rem;color:var(--muted)}
+.svg-linha{stroke:var(--line-strong);stroke-width:2;fill:none}
+.svg-caixa{fill:var(--acento-bg);stroke:var(--acento);stroke-width:2}
+.svg-texto{fill:var(--ink);font:700 15px var(--f-body)}
+
+/* Comparação */
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}
+.duo .caixa h3{color:var(--acento)}
+
+/* Linha do tempo */
+ol.linha-tempo{list-style:none;margin:0;padding:0 0 0 1.1rem;border-left:3px solid var(--acento);display:flex;flex-direction:column;gap:1rem}
+ol.linha-tempo li{position:relative;display:flex;flex-direction:column;gap:.15rem}
+ol.linha-tempo li::before{content:"";position:absolute;left:calc(-1.1rem - 9px);top:.45rem;width:15px;height:15px;border-radius:50%;background:var(--sheet);border:3px solid var(--acento)}
+.quando{font:800 1rem var(--f-display);color:var(--acento)}
+
+/* Vocabulário */
+dl.vocab{margin:0;display:grid;gap:.6rem}
+dl.vocab div{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:.6rem .9rem}
+dl.vocab dt{font-weight:700}
+dl.vocab dd{margin:0;color:var(--muted)}
+
+/* Laboratório (interativo) */
+.lab{background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:1.2rem;display:flex;flex-direction:column;gap:1rem}
+.ctrl{display:grid;grid-template-columns:minmax(0,7rem) minmax(0,1fr) 3rem;gap:.75rem;align-items:center}
+.ctrl label{font-weight:700;font-size:.95rem}
+.ctrl output{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+input[type="range"]{width:100%;accent-color:var(--acento)}
+.barra-fundo{height:1.4rem;border-radius:999px;background:var(--acento-bg);overflow:hidden}
+.barra-cheia{height:100%;background:var(--acento);border-radius:999px;transition:width .2s}
+.resultado{font:600 1.15rem var(--f-display)}
+
+/* Exercícios */
+.voce{border:2px dashed var(--acento);border-radius:14px;padding:1.2rem;background:var(--sheet);display:flex;flex-direction:column;gap:1.2rem}
+.voce h3{color:var(--acento)}
+.ex{display:flex;flex-direction:column;gap:.6rem;padding-top:1rem;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0;padding-top:0}
+.ex .num{font-weight:700;color:var(--acento)}
+details summary{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;list-style:none;color:var(--acento);font-weight:700;border:1.5px solid var(--acento);border-radius:999px;padding:.3rem .95rem;font-size:.95rem}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"+";font-size:1.1rem;line-height:1}
+details[open] summary::before{content:"−"}
+.resp{margin-top:.7rem;background:var(--acento-bg);border-radius:10px;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.4rem}
+
+/* Quiz */
+.quiz{display:flex;flex-direction:column;gap:.6rem}
+.quiz fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+.quiz legend{font-weight:700;margin-bottom:.4rem;padding:0}
+.quiz label{display:flex;gap:.6rem;align-items:center;border:1.5px solid var(--line-strong);border-radius:10px;padding:.55rem .8rem;cursor:pointer;background:var(--sheet)}
+.quiz label:has(input:checked){border-color:var(--acento);background:var(--acento-bg)}
+.quiz input{accent-color:var(--acento)}
+.retorno{font-weight:700}
+.retorno.certo{color:var(--ok)}
+.retorno.errado{color:var(--erro)}
+
+/* Botões */
+button{font:700 .95rem var(--f-body);cursor:pointer;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--sheet);color:var(--ink);padding:.45rem 1.05rem;align-self:flex-start}
+button:hover{border-color:var(--ink)}
+button.primario{background:var(--acento);border-color:var(--acento);color:var(--sheet)}
+
+/* Resumão */
+.cola{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.cola .caixa{border:2px solid var(--acento)}
+.cola dl{margin:0;display:grid;gap:.5rem}
+.cola dt{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cola dd{margin:0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+
+  <!-- COMPONENTE topo: matéria e público, título, frase de abertura, pergunta da aula e índice -->
+  <header class="topo">
+    <p class="eyebrow">[Matéria] · [Série ou público]</p>
+    <h1>[Título da aula]</h1>
+    <p class="lead">[Uma ou duas frases dizendo o que a pessoa vai conseguir fazer no fim da aula.]</p>
+    <p class="pergunta">[A pergunta que esta aula responde?]</p>
+    <nav class="mapa" aria-label="Partes da aula">
+      <a href="#parte1">1. [Ideia principal]</a>
+      <a href="#parte2">2. [Passo a passo]</a>
+      <a href="#parte3">3. [Comparar e organizar]</a>
+      <a href="#parte4">4. Explorar</a>
+      <a href="#parte5">5. Praticar</a>
+      <a href="#parte6">6. Resumão</a>
+    </nav>
+  </header>
+
+  <!-- PARTE: copie este bloco <section> para cada parte nova (troque o id e o número) -->
+  <section id="parte1">
+    <div class="cab">
+      <p class="eyebrow">Parte 1</p>
+      <h2>[Ideia principal]</h2>
+    </div>
+
+    <div class="bloco">
+      <p>[Comece pelo que a pessoa já conhece: uma situação do dia a dia ligada ao tema.]</p>
+      <p>[Depois explique a ideia nova em frases curtas. Destaque o termo novo com <mark>marca-texto</mark>.]</p>
+    </div>
+
+    <!-- COMPONENTE destaque: fórmula, regra, definição, citação ou frase que precisa ser lembrada -->
+    <div class="destaque">[fórmula ou regra principal]<small>[o que cada parte significa, em uma linha]</small></div>
+    <div class="destaque texto">“[Uma definição ou citação importante.]”<small>[Fonte ou autor, se houver]</small></div>
+
+    <!-- COMPONENTE termos: explica as partes de uma fórmula, de uma palavra ou de um esquema -->
+    <ul class="termos">
+      <li><span class="termo">[A]</span><span>[o que é a primeira parte]</span></li>
+      <li><span class="termo">[B]</span><span>[o que é a segunda parte]</span></li>
+    </ul>
+
+    <!-- COMPONENTE ideia-chave: a frase mais importante da parte -->
+    <div class="ideia">
+      <span class="rotulo">Ideia-chave</span>
+      <p>[Resuma a parte numa frase que caberia num post-it.]</p>
+    </div>
+
+    <!-- COMPONENTE dica: atalho, truque de memória ou jeito mais fácil de pensar -->
+    <div class="dica">
+      <span class="rotulo">Dica</span>
+      <p>[Um truque para lembrar ou um jeito rápido de conferir.]</p>
+    </div>
+  </section>
+
+  <section id="parte2">
+    <div class="cab">
+      <p class="eyebrow">Parte 2</p>
+      <h2>[Passo a passo]</h2>
+    </div>
+    <p>[Um exemplo resolvido do começo ao fim. Cada passo faz uma coisa só.]</p>
+
+    <!-- COMPONENTE passo a passo: resolução, procedimento, método ou receita -->
+    <ol class="passos">
+      <li><div><strong>[Primeiro passo]</strong><p>[O que fazer e por quê.]</p></div></li>
+      <li><div><strong>[Segundo passo]</strong><p>[O que fazer e por quê.]</p></div></li>
+      <li><div><strong>[Terceiro passo]</strong><p>[Resultado e como conferir.]</p></div></li>
+    </ol>
+
+    <!-- COMPONENTE tabela: dados, comparações, classificações ou valores -->
+    <div class="rolar">
+      <table class="tab">
+        <thead><tr><th>[Coluna 1]</th><th>[Coluna 2]</th><th>[Coluna 3]</th></tr></thead>
+        <tbody>
+          <tr><td>[dado]</td><td>[dado]</td><td>[dado]</td></tr>
+          <tr><td>[dado]</td><td>[dado]</td><td>[dado]</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- COMPONENTE figura: troque o SVG por um gráfico, mapa, esquema, ciclo ou diagrama -->
+    <figure class="fig">
+      <svg viewBox="0 0 400 150" role="img" aria-label="[Descreva a figura para quem não enxerga]">
+        <rect class="svg-caixa" x="10" y="45" width="110" height="60" rx="10"/>
+        <rect class="svg-caixa" x="145" y="45" width="110" height="60" rx="10"/>
+        <rect class="svg-caixa" x="280" y="45" width="110" height="60" rx="10"/>
+        <path class="svg-linha" d="M120 75h25M255 75h25"/>
+        <path class="svg-linha" d="M138 69l7 6-7 6M273 69l7 6-7 6"/>
+        <text class="svg-texto" x="65" y="80" text-anchor="middle">[Etapa 1]</text>
+        <text class="svg-texto" x="200" y="80" text-anchor="middle">[Etapa 2]</text>
+        <text class="svg-texto" x="335" y="80" text-anchor="middle">[Etapa 3]</text>
+      </svg>
+      <figcaption>[Legenda: o que observar na figura.]</figcaption>
+    </figure>
+
+    <!-- COMPONENTE cuidado: erro comum, pegadinha ou confusão frequente -->
+    <div class="cuidado">
+      <span class="rotulo">Cuidado</span>
+      <p>[O erro que mais acontece aqui e como evitar.]</p>
+    </div>
+  </section>
+
+  <section id="parte3">
+    <div class="cab">
+      <p class="eyebrow">Parte 3</p>
+      <h2>[Comparar e organizar]</h2>
+    </div>
+
+    <!-- COMPONENTE comparação: dois ou três conceitos lado a lado -->
+    <div class="duo">
+      <div class="caixa"><h3>[Conceito A]</h3><p>[Como é, quando aparece, um exemplo.]</p></div>
+      <div class="caixa"><h3>[Conceito B]</h3><p>[Como é, quando aparece, um exemplo.]</p></div>
+    </div>
+
+    <!-- COMPONENTE linha do tempo: fatos em ordem, etapas de um processo, enredo de uma obra -->
+    <ol class="linha-tempo">
+      <li><span class="quando">[Data ou etapa]</span><span>[O que aconteceu.]</span></li>
+      <li><span class="quando">[Data ou etapa]</span><span>[O que aconteceu.]</span></li>
+      <li><span class="quando">[Data ou etapa]</span><span>[O que aconteceu.]</span></li>
+    </ol>
+
+    <!-- COMPONENTE vocabulário: termos técnicos, palavras em outra língua, conceitos -->
+    <dl class="vocab">
+      <div><dt>[Termo]</dt><dd>[Significado em palavras simples.]</dd></div>
+      <div><dt>[Termo]</dt><dd>[Significado em palavras simples.]</dd></div>
+    </dl>
+  </section>
+
+  <!-- COMPONENTE laboratório: algo para mexer e ver o resultado. Troque a conta em calcular(). -->
+  <section id="parte4">
+    <div class="cab">
+      <p class="eyebrow">Parte 4</p>
+      <h2>Explorar</h2>
+    </div>
+    <p>[Diga o que mexer e o que observar.]</p>
+    <div class="lab">
+      <div class="ctrl">
+        <label for="labValor">[Grandeza]</label>
+        <input id="labValor" type="range" min="0" max="10" step="1" value="4">
+        <output id="labValorTxt" for="labValor">4</output>
+      </div>
+      <div class="barra-fundo" aria-hidden="true"><div class="barra-cheia" id="labBarra"></div></div>
+      <p class="resultado" id="labResultado">[Resultado]</p>
+      <p class="muted" id="labObs">[Observação que muda conforme o valor.]</p>
+    </div>
+  </section>
+
+  <section id="parte5">
+    <div class="cab">
+      <p class="eyebrow">Parte 5</p>
+      <h2>Praticar</h2>
+    </div>
+
+    <!-- COMPONENTE exercícios: tente antes, resposta escondida com a resolução -->
+    <div class="voce">
+      <h3>Agora você</h3>
+      <div class="ex">
+        <p><span class="num">1.</span> [Enunciado fácil, parecido com o exemplo.]</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp"><p>[Resolução passo a passo.]</p><p><strong>[Resposta final.]</strong></p></div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">2.</span> [Enunciado médio, com uma pequena mudança.]</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp"><p>[Resolução passo a passo.]</p><p><strong>[Resposta final.]</strong></p></div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">3.</span> [Problema contextualizado, do dia a dia.]</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp"><p>[Resolução passo a passo.]</p><p><strong>[Resposta final.]</strong></p></div>
+        </details>
+      </div>
+    </div>
+
+    <!-- COMPONENTE quiz: múltipla escolha. Use name único por pergunta e data-certa com o value correto. -->
+    <div class="voce">
+      <h3>Teste rápido</h3>
+      <div class="quiz" data-certa="b">
+        <fieldset>
+          <legend>[Pergunta de múltipla escolha?]</legend>
+          <label><input type="radio" name="quiz1" value="a"> [Alternativa A]</label>
+          <label><input type="radio" name="quiz1" value="b"> [Alternativa B, a correta]</label>
+          <label><input type="radio" name="quiz1" value="c"> [Alternativa C]</label>
+        </fieldset>
+        <button type="button" class="primario quiz-conferir">Conferir</button>
+        <p class="retorno" aria-live="polite"></p>
+        <p class="muted quiz-explica" hidden>[Por que a alternativa B está certa e onde as outras erram.]</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="parte6">
+    <div class="cab">
+      <p class="eyebrow">Parte 6</p>
+      <h2>Resumão</h2>
+    </div>
+
+    <!-- COMPONENTE resumão: o que vale revisar antes da prova -->
+    <div class="cola">
+      <div class="caixa">
+        <h3>[Tópico 1]</h3>
+        <dl>
+          <div><dt>[O que é]</dt><dd>[Resposta curta]</dd></div>
+          <div><dt>[Como reconhecer]</dt><dd>[Resposta curta]</dd></div>
+        </dl>
+      </div>
+      <div class="caixa">
+        <h3>[Tópico 2]</h3>
+        <dl>
+          <div><dt>[O que é]</dt><dd>[Resposta curta]</dd></div>
+          <div><dt>[Como usar]</dt><dd>[Resposta curta]</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="cuidado">
+      <span class="rotulo">Erros que mais caem na prova</span>
+      <ol class="lista">
+        <li>[Erro comum 1 e o jeito certo.]</li>
+        <li>[Erro comum 2 e o jeito certo.]</li>
+      </ol>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  /* Laboratório: troque calcular() pela relação do seu tema. */
+  function calcular(v){
+    return {
+      texto:'[Resultado] = ' + (v * 2),        /* ex.: v * 2, uma fórmula, uma classificação */
+      obs:v < 4 ? '[Observação para valores baixos]' : v < 8 ? '[Observação para valores médios]' : '[Observação para valores altos]',
+      porcento:v * 10                           /* quanto da barra fica cheia (0 a 100) */
+    };
+  }
+  var valor = document.getElementById('labValor');
+  function atualizarLab(){
+    if (!valor) return;
+    var v = Number(valor.value), r = calcular(v);
+    document.getElementById('labValorTxt').textContent = String(v).replace('.', ',');
+    document.getElementById('labResultado').textContent = r.texto;
+    document.getElementById('labObs').textContent = r.obs;
+    document.getElementById('labBarra').style.width = Math.max(0, Math.min(100, r.porcento)) + '%';
+  }
+  if (valor){ valor.addEventListener('input', atualizarLab); atualizarLab(); }
+
+  /* Quiz: confere a alternativa marcada. */
+  var quizzes = Array.prototype.slice.call(document.querySelectorAll('.quiz'));
+  function conferir(q){
+    var marcada = q.querySelector('input:checked'), ret = q.querySelector('.retorno');
+    if (!marcada){ ret.textContent = 'Escolha uma alternativa primeiro.'; ret.className = 'retorno errado'; return; }
+    var certo = marcada.value === q.getAttribute('data-certa');
+    ret.textContent = certo ? 'Certo!' : 'Ainda não. Leia a explicação e tente de novo.';
+    ret.className = 'retorno ' + (certo ? 'certo' : 'errado');
+    q.querySelector('.quiz-explica').hidden = false;
+    q.setAttribute('data-conferido', '1');
+  }
+  quizzes.forEach(function(q){
+    q.querySelector('.quiz-conferir').addEventListener('click', function(){ conferir(q); });
+    q.addEventListener('change', function(){ q.querySelector('.retorno').textContent = ''; });
+  });
+
+  /* Lousa ao vivo: quem entra no meio da aula recebe também os quizzes já conferidos.
+     (Respostas abertas, campos e botões já são sincronizados sozinhos.) */
+  window.aulaEstado = {
+    obter: function(){ return {conferidos:quizzes.map(function(q){ return q.getAttribute('data-conferido') === '1'; })}; },
+    aplicar: function(s){
+      if (!s || !Array.isArray(s.conferidos)) return;
+      quizzes.forEach(function(q, i){ if (s.conferidos[i]) conferir(q); });
+    }
+  };
+})();
+</script>
+</body>
+</html>

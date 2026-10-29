@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Funções afim e quadrática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<style>
+/* Layout: uma coluna de leitura sobre papel quadriculado. Caneta azul = afim, caneta verde = quadrática, caneta vermelha = cuidado, marca-texto = dica. */
+:root{
+  --paper:#F7F9FC; --paper-grid:#E6ECF5; --sheet:#FFFFFF; --ink:#18202F; --muted:#586379;
+  --line:#D8DFEA; --line-strong:#B5C0D2; --g-grid:#E4E9F1;
+  --blue:#1D5BD6; --blue-bg:#E7EEFC; --green:#0F7A57; --green-bg:#E1F3EA;
+  --red:#C42F3E; --red-bg:#FCEBEC; --marker:#FFE97A; --amber:#C46F00; --violet:#7440C9;
+  --f-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-math:"STIX Two Text","Cambria Math",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F131A; --paper-grid:#171D27; --sheet:#151B24; --ink:#E7ECF4; --muted:#9BA6B8;
+    --line:#283242; --line-strong:#3C495D; --g-grid:#222B38;
+    --blue:#8AB0FA; --blue-bg:#18284A; --green:#5CD3A6; --green-bg:#123228;
+    --red:#FF8B93; --red-bg:#3B1A1E; --marker:#5B4A06; --amber:#F2AE4A; --violet:#B999FA;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F131A; --paper-grid:#171D27; --sheet:#151B24; --ink:#E7ECF4; --muted:#9BA6B8;
+  --line:#283242; --line-strong:#3C495D; --g-grid:#222B38;
+  --blue:#8AB0FA; --blue-bg:#18284A; --green:#5CD3A6; --green-bg:#123228;
+  --red:#FF8B93; --red-bg:#3B1A1E; --marker:#5B4A06; --amber:#F2AE4A; --violet:#B999FA;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;color-scheme:light}
+img{max-width:100%}
+body{
+  margin:0;
+  padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);
+  background-color:var(--paper); color:var(--ink);
+  background-image:linear-gradient(var(--paper-grid) 1px,transparent 1px),linear-gradient(90deg,var(--paper-grid) 1px,transparent 1px);
+  background-size:28px 28px;
+  font:400 1.0625rem/1.65 var(--f-body);
+  padding-inline:16px;
+}
+main{max-width:46rem;margin:0 auto;padding-block:2rem 5rem;display:flex;flex-direction:column;gap:4rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-weight:800;font-size:clamp(2.4rem,8vw,3.5rem);letter-spacing:-.02em}
+h2{font-weight:800;font-size:clamp(1.9rem,5.5vw,2.5rem);letter-spacing:-.015em}
+h3{font-weight:600;font-size:1.3rem}
+p{margin:0}
+a{color:inherit}
+mark{background:var(--marker);color:var(--ink);padding:0 .15em;border-radius:3px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.mat{font-family:var(--f-math);font-size:1.15em}
+.mat i,.formula i{font-style:italic}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.8rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* Topo */
+.topo{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:1.5rem;align-items:center}
+.topo .texto{display:flex;flex-direction:column;gap:1rem;min-width:0}
+.lead{font-size:1.15rem;color:var(--muted);max-width:34rem}
+.mapa{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.25rem}
+.mapa a{text-decoration:none;font-size:.92rem;font-weight:700;padding:.35rem .8rem;border:1.5px solid var(--line-strong);border-radius:999px;background:var(--sheet)}
+.mapa a:hover{border-color:var(--ink)}
+#heroG{width:100%;height:auto;display:block}
+@media (max-width:640px){.topo{grid-template-columns:minmax(0,1fr)} #heroG{max-width:280px}}
+
+/* Partes */
+section{display:flex;flex-direction:column;gap:1.5rem;scroll-margin-top:1rem}
+section[data-cor="blue"]{--cor:var(--blue);--cor-bg:var(--blue-bg)}
+section[data-cor="green"]{--cor:var(--green);--cor-bg:var(--green-bg)}
+section[data-cor="ink"]{--cor:var(--ink);--cor-bg:var(--sheet)}
+.cab{display:flex;flex-direction:column;gap:.4rem;border-bottom:3px solid var(--cor);padding-bottom:.75rem}
+.cab .eyebrow{color:var(--cor)}
+.bloco{display:flex;flex-direction:column;gap:.85rem}
+.bloco>p,.bloco>ul{max-width:40rem}
+ul.lista{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.35rem}
+
+.formula{font-family:var(--f-math);font-size:clamp(1.9rem,7vw,2.7rem);text-align:center;padding:1rem 1.25rem;background:var(--sheet);border:2px solid var(--cor);border-radius:14px;line-height:1.3}
+.k{color:var(--cor);font-weight:600;font-style:italic}
+.legenda{display:grid;gap:.5rem;margin:0;padding:0;list-style:none}
+.legenda li{display:flex;gap:.75rem;align-items:baseline}
+.letra{flex:none;display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:50%;background:var(--cor-bg);color:var(--cor);font:italic 600 1.2rem var(--f-math)}
+
+.box{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.dica{background:var(--sheet);border:1.5px dashed var(--line-strong);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.dica .rotulo{align-self:flex-start;background:var(--marker);color:var(--ink);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;padding:.1rem .45rem;border-radius:3px}
+.cuidado{background:var(--red-bg);border:2px solid var(--red);border-radius:12px;padding:.9rem 1.15rem;display:flex;flex-direction:column;gap:.4rem}
+.cuidado .rotulo{color:var(--red);font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
+
+.rolar{overflow-x:auto;max-width:100%}
+table.tab{border-collapse:collapse;font-variant-numeric:tabular-nums;background:var(--sheet);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:100%}
+.tab th,.tab td{padding:.55rem .85rem;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.tab tr:last-child td,.tab tr:last-child th{border-bottom:0}
+.tab th{font-size:.85rem;color:var(--muted);font-weight:700;text-align:left}
+.tab thead th{text-align:center}
+.tab td.mat{font-size:1.1rem}
+.tab .forte{color:var(--cor);font-weight:700}
+
+figure.graf{margin:0;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;gap:.5rem}
+figure.graf svg{width:100%;height:auto;display:block}
+figcaption{font-size:.9rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.35rem 1rem}
+.dot{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.35rem;vertical-align:-.05rem}
+.g-grid{stroke:var(--g-grid);stroke-width:1}
+.g-axis{stroke:var(--muted);stroke-width:1.5}
+.g-lab{fill:var(--muted);font:400 13px var(--f-body)}
+.g-name{fill:var(--muted);font:700 13px var(--f-body)}
+.g-pt{fill:var(--ink);font:700 13px var(--f-body);paint-order:stroke;stroke:var(--sheet);stroke-width:4px;stroke-linejoin:round}
+.g-sim{stroke:var(--violet);stroke-width:1.5;stroke-dasharray:5 5}
+
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.duo .box{align-items:flex-start}
+.duo svg{width:100%;max-width:200px;height:auto;display:block}
+.duo h3{font-size:1.15rem}
+
+/* Máquina */
+.maquina{display:flex;flex-wrap:wrap;align-items:stretch;gap:.6rem}
+.caixa{flex:1 1 7rem;min-width:0;background:var(--sheet);border:1.5px solid var(--line-strong);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;text-align:center}
+.caixa strong{font:600 2rem var(--f-math);font-variant-numeric:tabular-nums}
+.caixa.motor{flex:1.6 1 11rem;background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.caixa.motor .rot{color:var(--paper)}
+.rot{font-size:.8rem;color:var(--muted);font-weight:700}
+.seta{align-self:center;font-size:1.6rem;color:var(--muted)}
+.teste{display:flex;flex-direction:column;gap:.5rem}
+.linha{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+input[type="text"]{font:600 1.25rem var(--f-body);width:7rem;padding:.4rem .7rem;border:1.5px solid var(--line-strong);border-radius:10px;background:var(--sheet);color:var(--ink)}
+.erro{color:var(--red);font-size:.9rem;font-weight:700}
+.conta{font-family:var(--f-math);font-size:1.3rem}
+
+/* Passos */
+ol.passos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.85rem;counter-reset:p}
+ol.passos>li{counter-increment:p;display:grid;grid-template-columns:2.4rem minmax(0,1fr);gap:.9rem;background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem}
+ol.passos>li::before{content:counter(p);width:2.4rem;height:2.4rem;border-radius:50%;background:var(--cor);color:var(--sheet);display:flex;align-items:center;justify-content:center;font:800 1.15rem var(--f-display)}
+ol.passos>li>div{display:flex;flex-direction:column;gap:.45rem;min-width:0}
+.casos{display:grid;gap:.4rem;margin:0;padding:0;list-style:none}
+.casos li{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+.casos .mat{min-width:4.2rem;font-weight:600}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .15em;line-height:1.2}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .25em .05em}
+.frac>span:last-child{padding-top:.05em}
+.grande{font-size:1.6rem;text-align:center;padding:.5rem 0}
+
+/* Agora você */
+.voce{border:2px dashed var(--cor);border-radius:14px;padding:1.25rem;background:var(--sheet);display:flex;flex-direction:column;gap:1.25rem}
+.voce h3{color:var(--cor)}
+.ex{display:flex;flex-direction:column;gap:.6rem;padding-top:1rem;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0;padding-top:0}
+.ex .num{font-weight:700;color:var(--cor)}
+details summary{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer;list-style:none;color:var(--cor);font-weight:700;border:1.5px solid var(--cor);border-radius:999px;padding:.3rem .95rem;font-size:.95rem}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"+";font-size:1.1rem;line-height:1}
+details[open] summary::before{content:"−"}
+.resp{margin-top:.7rem;background:var(--cor-bg);border-radius:10px;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.4rem}
+
+/* Laboratório */
+.lab{--labcor:var(--blue);--labbg:var(--blue-bg);background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:1rem}
+.lab.quad{--labcor:var(--green);--labbg:var(--green-bg)}
+.modo{display:flex;flex-wrap:wrap;gap:.5rem}
+button{font:700 .95rem var(--f-body);cursor:pointer;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--sheet);color:var(--ink);padding:.45rem 1.05rem}
+button:hover{border-color:var(--ink)}
+.modo button[aria-pressed="true"]{background:var(--labcor);border-color:var(--labcor);color:var(--sheet)}
+#labEq{font:600 clamp(1.5rem,6vw,2rem) var(--f-math);color:var(--labcor)}
+.ctrl{display:grid;grid-template-columns:2rem minmax(0,1fr) 3rem;gap:.75rem;align-items:center}
+.ctrl label{font:italic 600 1.3rem var(--f-math);color:var(--labcor)}
+.ctrl output{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+input[type="range"]{width:100%;accent-color:var(--labcor)}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem}
+.chip{background:var(--labbg);border-radius:10px;padding:.55rem .8rem;display:flex;flex-direction:column}
+.chip span{font-size:.8rem;color:var(--muted);font-weight:700}
+.chip strong{font-size:1.05rem}
+.desafios{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.desafios h3{font-size:1.05rem;margin-bottom:.4rem}
+.desafios ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+.desafios li{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.5rem .75rem;border:1px solid var(--line);border-radius:10px;background:var(--sheet)}
+.st{flex:none;font-size:.78rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;background:var(--paper);color:var(--muted);border:1px solid var(--line)}
+.desafios li.ok{border-color:var(--green)}
+.desafios li.ok .st{background:var(--green);color:var(--sheet);border-color:var(--green)}
+#parabens{font-weight:700;color:var(--green)}
+
+/* Resumão */
+.cola{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem}
+.cola .card{background:var(--sheet);border:2px solid var(--c);border-radius:14px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:.7rem}
+.cola .card h3{color:var(--c)}
+.cola dl{margin:0;display:grid;gap:.55rem}
+.cola dt{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cola dd{margin:0}
+ol.erros{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:.5rem}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<main>
+  <header class="topo">
+    <div class="texto">
+      <p class="eyebrow">Matemática · Coisa de Pré</p>
+      <h1>Funções afim e quadrática</h1>
+      <p class="lead">Um guia passo a passo pra criança mimada. Leia na ordem, faça os exemplos junto e tente cada exercício antes de abrir a resposta. Use o botão <strong>Desenhar</strong>, lá embaixo, para rabiscar na página enquanto explica.</p>
+      <nav class="mapa" aria-label="Partes do guia">
+        <a href="#parte1">1. O que é função</a>
+        <a href="#parte2">2. Função afim</a>
+        <a href="#parte3">3. Função quadrática</a>
+        <a href="#parte4">4. Laboratório</a>
+        <a href="#parte5">5. Resumão</a>
+      </nav>
+    </div>
+    <svg id="heroG" role="img" aria-label="Uma reta azul e uma parábola verde desenhadas no plano cartesiano"></svg>
+  </header>
+
+  <!-- PARTE 1 -->
+  <section id="parte1" data-cor="ink">
+    <div class="cab">
+      <p class="eyebrow">Parte 1</p>
+      <h2>O que é uma função?</h2>
+    </div>
+    <div class="bloco">
+      <p>Pense numa <mark>máquina</mark>. Você coloca um número, ela faz uma conta e devolve outro número. Isso é uma função.</p>
+      <p>O número que <strong>entra</strong> a gente chama de <span class="mat"><i>x</i></span>. O número que <strong>sai</strong> a gente chama de <span class="mat"><i>f</i>(<i>x</i>)</span>, que se lê “f de x”. Às vezes também chamam de <span class="mat"><i>y</i></span>.</p>
+    </div>
+
+    <div class="box teste">
+      <label for="maqX"><strong>Teste a máquina.</strong> Coloque um número e veja a conta:</label>
+      <div class="linha">
+        <input id="maqX" type="text" inputmode="decimal" value="3" autocomplete="off">
+      </div>
+      <p id="maqErr" class="erro" hidden>Digite um número, por exemplo 5 ou −2.</p>
+      <p class="conta" id="maqConta">f(3) = 2 · 3 + 1 = 6 + 1 = 7</p>
+    </div>
+
+    <div class="maquina" aria-live="polite">
+      <div class="caixa"><span class="rot">Entra (x)</span><strong id="maqIn">3</strong></div>
+      <span class="seta" aria-hidden="true">→</span>
+      <div class="caixa motor"><span class="rot">Máquina f(x) = 2x + 1</span><strong>×2 , +1</strong><span class="rot">vezes 2, depois mais 1</span></div>
+      <span class="seta" aria-hidden="true">→</span>
+      <div class="caixa"><span class="rot">Sai f(x)</span><strong id="maqOut">7</strong></div>
+    </div>
+
+    <div class="dica">
+      <span class="rotulo">Dica</span>
+      <p>Quando aparecer <span class="mat"><i>f</i>(5)</span>, por exemplo, é só <strong>trocar o x por 5</strong> e fazer a conta. Escrever <span class="mat"><i>f</i>(3) = 7</span> quer dizer: “quando entra 3, sai 7”.</p>
+    </div>
+  </section>
+
+  <!-- PARTE 2 -->
+  <section id="parte2" data-cor="blue">
+    <div class="cab">
+      <p class="eyebrow">Parte 2</p>
+      <h2>Função afim</h2>
+    </div>
+
+    <div class="bloco">
+      <p>Toda função que tem esta “cara” é uma função afim:</p>
+      <div class="formula"><i>f</i>(<i>x</i>) = <span class="k">a</span><i>x</i> + <span class="k">b</span></div>
+      <ul class="legenda">
+        <li><span class="letra">a</span><span>é o número que <strong>multiplica o x</strong> (está grudado nele)</span></li>
+        <li><span class="letra">b</span><span>é o número que <strong>está sozinho</strong></span></li>
+      </ul>
+      <p>O gráfico de uma função afim é <mark>sempre uma reta</mark>.</p>
+    </div>
+
+    <div class="bloco">
+      <h3>Um exemplo da vida real</h3>
+      <p>Uma corrida de aplicativo custa <strong>R$ 5 só para começar</strong>, mais <strong>R$ 2 por quilômetro</strong>. Então:</p>
+      <p class="conta" style="text-align:center">preço = 2 · (quilômetros) + 5 &nbsp;→&nbsp; <i>f</i>(<i>x</i>) = 2<i>x</i> + 5</p>
+      <div class="rolar">
+        <table class="tab">
+          <tbody>
+            <tr><th scope="row">Quilômetros (x)</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+            <tr><th scope="row">Conta</th><td class="mat">2·0 + 5</td><td class="mat">2·1 + 5</td><td class="mat">2·2 + 5</td><td class="mat">2·3 + 5</td><td class="mat">2·4 + 5</td></tr>
+            <tr><th scope="row">Preço em R$</th><td class="forte">5</td><td class="forte">7</td><td class="forte">9</td><td class="forte">11</td><td class="forte">13</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Repare: a cada quilômetro o preço sobe <strong>sempre R$ 2</strong>. Esse 2 é o <span class="k mat">a</span>. O 5 é o <span class="k mat">b</span>: é o que você paga mesmo andando 0 km.</p>
+      <figure class="graf">
+        <svg id="gTaxi" role="img" aria-label="Gráfico da função f(x) = 2x + 5, uma reta que começa em 5 e sobe 2 a cada quilômetro"></svg>
+        <figcaption><span>Ligando os pontos da tabela, sai uma reta.</span><span><span class="dot" style="background:var(--ink)"></span>onde começa (b = 5)</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="bloco">
+      <h3>Quem é o a e quem é o b?</h3>
+      <div class="rolar">
+        <table class="tab">
+          <thead><tr><th>Função</th><th>a</th><th>b</th></tr></thead>
+          <tbody>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = 3<i>x</i> + 4</td><td class="forte">3</td><td class="forte">4</td></tr>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = −<i>x</i> + 7</td><td class="forte">−1</td><td class="forte">7</td></tr>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = 5 − 2<i>x</i></td><td class="forte">−2</td><td class="forte">5</td></tr>
+            <tr><td class="mat"><i>f</i>(<i>x</i>) = 4<i>x</i></td><td class="forte">4</td><td class="forte">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="cuidado">
+        <span class="rotulo">Cuidado</span>
+        <p>O sinal que vem <strong>antes</strong> do número vai junto com ele. Em <span class="mat"><i>f</i>(<i>x</i>) = 5 − 2<i>x</i></span>, o a é <strong>−2</strong> (e não 5), porque o a é sempre quem está grudado no x, mesmo que apareça no fim.</p>
+        <p>Se aparece só <span class="mat"><i>x</i></span>, o a é 1. Se aparece <span class="mat">−<i>x</i></span>, o a é −1. Se não tem número sozinho, o b é 0.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>A reta sobe ou desce?</h3>
+      <p>Quem decide é o <strong>sinal do a</strong>. Leia o gráfico da esquerda para a direita, como um texto:</p>
+      <div class="duo">
+        <div class="box">
+          <svg id="gSobe" role="img" aria-label="Reta subindo"></svg>
+          <h3>a positivo: sobe</h3>
+          <p class="muted">Chamamos de <strong>crescente</strong>. Ex.: <span class="mat"><i>f</i>(<i>x</i>) = 2<i>x</i> + 1</span></p>
+        </div>
+        <div class="box">
+          <svg id="gDesce" role="img" aria-label="Reta descendo"></svg>
+          <h3>a negativo: desce</h3>
+          <p class="muted">Chamamos de <strong>decrescente</strong>. Ex.: <span class="mat"><i>f</i>(<i>x</i>) = −3<i>x</i> + 2</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>Onde a reta corta os eixos</h3>
+      <p><strong>No eixo y:</strong> a reta sempre corta no ponto <span class="mat">(0, <i>b</i>)</span>. É só trocar x por 0: <span class="mat"><i>f</i>(0) = <i>a</i> · 0 + <i>b</i> = <i>b</i></span>.</p>
+      <p><strong>No eixo x:</strong> esse ponto se chama <mark>zero da função</mark>. É o valor de x que faz a conta dar zero. Para achar, <strong>iguale a função a zero</strong> e resolva a equação.</p>
+      <ol class="passos">
+        <li><div><strong>Iguale a zero.</strong><p class="mat">2<i>x</i> − 6 = 0</p></div></li>
+        <li><div><strong>Passe o número sozinho para o outro lado, trocando o sinal.</strong><p class="mat">2<i>x</i> = 6</p></div></li>
+        <li><div><strong>Passe o número que multiplica o x dividindo.</strong><p class="mat"><i>x</i> = 6 ÷ 2 = 3</p></div></li>
+      </ol>
+      <p>Pronto: o zero de <span class="mat"><i>f</i>(<i>x</i>) = 2<i>x</i> − 6</span> é <strong>x = 3</strong>. A reta corta o eixo x no ponto <span class="mat">(3, 0)</span>.</p>
+      <figure class="graf">
+        <svg id="gZero" role="img" aria-label="Gráfico de f(x) = 2x − 6 cortando o eixo y em menos 6 e o eixo x em 3"></svg>
+        <figcaption><span><span class="dot" style="background:var(--ink)"></span>corta o eixo y (b)</span><span><span class="dot" style="background:var(--amber)"></span>zero da função</span></figcaption>
+      </figure>
+      <div class="dica">
+        <span class="rotulo">Dica</span>
+        <p>Existe um atalho: o zero é sempre <span class="mat"><i>x</i> = −<i>b</i> ÷ <i>a</i></span>. Mas resolver a equação como acima funciona sempre e é mais difícil de errar o sinal.</p>
+      </div>
+    </div>
+
+    <div class="voce">
+      <h3>Agora você</h3>
+      <div class="ex">
+        <p><span class="num">1.</span> Na função <span class="mat"><i>f</i>(<i>x</i>) = 4<i>x</i> − 8</span>: quem é o a e quem é o b? A reta sobe ou desce? Qual é o zero?</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>a = 4 e b = −8.</p>
+            <p>Como a é positivo, a reta <strong>sobe</strong>.</p>
+            <p class="mat">4<i>x</i> − 8 = 0 → 4<i>x</i> = 8 → <i>x</i> = 8 ÷ 4 = 2</p>
+            <p>O zero é <strong>x = 2</strong>.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">2.</span> Na função <span class="mat"><i>f</i>(<i>x</i>) = −3<i>x</i> + 9</span>: calcule <span class="mat"><i>f</i>(2)</span> e ache o zero.</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p class="mat"><i>f</i>(2) = −3 · 2 + 9 = −6 + 9 = 3</p>
+            <p class="mat">−3<i>x</i> + 9 = 0 → −3<i>x</i> = −9 → <i>x</i> = (−9) ÷ (−3) = 3</p>
+            <p>O zero é <strong>x = 3</strong>. E como a = −3 é negativo, a reta desce.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">3.</span> Uma academia cobra <strong>R$ 50 de matrícula</strong> e <strong>R$ 80 por mês</strong>. Escreva a função do total pago depois de x meses. Quanto a pessoa paga em 6 meses?</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>O que muda a cada mês é o 80 (esse é o a). O valor fixo é 50 (esse é o b).</p>
+            <p class="mat"><i>f</i>(<i>x</i>) = 80<i>x</i> + 50</p>
+            <p class="mat"><i>f</i>(6) = 80 · 6 + 50 = 480 + 50 = 530</p>
+            <p>Em 6 meses ela paga <strong>R$ 530</strong>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTE 3 -->
+  <section id="parte3" data-cor="green">
+    <div class="cab">
+      <p class="eyebrow">Parte 3</p>
+      <h2>Função quadrática</h2>
+    </div>
+
+    <div class="bloco">
+      <p>Agora o x aparece <strong>ao quadrado</strong> (<span class="mat"><i>x</i>²</span>). Isso muda tudo: o gráfico deixa de ser reta e vira uma curva chamada <mark>parábola</mark>.</p>
+      <div class="formula"><i>f</i>(<i>x</i>) = <span class="k">a</span><i>x</i>² + <span class="k">b</span><i>x</i> + <span class="k">c</span></div>
+      <ul class="legenda">
+        <li><span class="letra">a</span><span>multiplica o <strong>x²</strong></span></li>
+        <li><span class="letra">b</span><span>multiplica o <strong>x</strong></span></li>
+        <li><span class="letra">c</span><span>é o número que <strong>está sozinho</strong></span></li>
+      </ul>
+      <p>O <strong>a nunca pode ser zero</strong>. Sem o x², a função vira afim de novo.</p>
+      <p>Na vida real: quando você joga uma bola para cima, ela sobe, para lá no alto e desce. O caminho da bola tem o formato de uma parábola. A água de um chafariz também.</p>
+    </div>
+
+    <div class="bloco">
+      <h3>Quem é a, b e c?</h3>
+      <div class="rolar">
+        <table class="tab">
+          <thead><tr><th>Função</th><th>a</th><th>b</th><th>c</th></tr></thead>
+          <tbody>
+            <tr><td class="mat"><i>x</i>² − 5<i>x</i> + 6</td><td class="forte">1</td><td class="forte">−5</td><td class="forte">6</td></tr>
+            <tr><td class="mat">−2<i>x</i>² + 3<i>x</i> + 1</td><td class="forte">−2</td><td class="forte">3</td><td class="forte">1</td></tr>
+            <tr><td class="mat"><i>x</i>² − 9</td><td class="forte">1</td><td class="forte">0</td><td class="forte">−9</td></tr>
+            <tr><td class="mat">3<i>x</i>² + 6<i>x</i></td><td class="forte">3</td><td class="forte">6</td><td class="forte">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="dica">
+        <span class="rotulo">Dica</span>
+        <p>Se um pedaço <strong>não aparece</strong>, o número dele é <strong>0</strong>. Em <span class="mat"><i>x</i>² − 9</span> não tem “x sozinho”, então b = 0.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>Boca para cima ou para baixo?</h3>
+      <p>Quem decide é, de novo, o <strong>sinal do a</strong>. Esse “jeito” da curva se chama <strong>concavidade</strong>.</p>
+      <div class="duo">
+        <div class="box">
+          <svg id="gFeliz" role="img" aria-label="Parábola com a boca para cima"></svg>
+          <h3>a positivo: boca para cima</h3>
+          <p class="muted">Parece um sorriso. Tem um <strong>ponto mais baixo</strong> (mínimo).</p>
+        </div>
+        <div class="box">
+          <svg id="gTriste" role="img" aria-label="Parábola com a boca para baixo"></svg>
+          <h3>a negativo: boca para baixo</h3>
+          <p class="muted">Parece uma carinha triste. Tem um <strong>ponto mais alto</strong> (máximo).</p>
+        </div>
+      </div>
+      <p>E o <span class="k mat">c</span>? É onde a parábola corta o eixo y, no ponto <span class="mat">(0, <i>c</i>)</span>. Mesma ideia do b na função afim.</p>
+    </div>
+
+    <div class="bloco">
+      <h3>Desenhando com uma tabela</h3>
+      <p>Vamos montar o gráfico de <span class="mat"><i>f</i>(<i>x</i>) = <i>x</i>² − 4<i>x</i> + 3</span>. Para cada x, troque na fórmula e faça a conta:</p>
+      <div class="rolar">
+        <table class="tab">
+          <thead><tr><th>x</th><th>Conta</th><th>f(x)</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td class="mat">0² − 4·0 + 3 = 0 − 0 + 3</td><td class="forte">3</td></tr>
+            <tr><td>1</td><td class="mat">1² − 4·1 + 3 = 1 − 4 + 3</td><td class="forte">0</td></tr>
+            <tr><td>2</td><td class="mat">2² − 4·2 + 3 = 4 − 8 + 3</td><td class="forte">−1</td></tr>
+            <tr><td>3</td><td class="mat">3² − 4·3 + 3 = 9 − 12 + 3</td><td class="forte">0</td></tr>
+            <tr><td>4</td><td class="mat">4² − 4·4 + 3 = 16 − 16 + 3</td><td class="forte">3</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Olha que legal: os resultados se repetem como num espelho (<strong>3, 0, −1, 0, 3</strong>). A parábola é <mark>simétrica</mark>.</p>
+      <figure class="graf">
+        <svg id="gPara" role="img" aria-label="Parábola de f(x) = x² − 4x + 3 com raízes em 1 e 3 e vértice em 2, menos 1"></svg>
+        <figcaption><span><span class="dot" style="background:var(--ink)"></span>corta o eixo y (c = 3)</span><span><span class="dot" style="background:var(--amber)"></span>raízes</span><span><span class="dot" style="background:var(--violet)"></span>vértice e eixo de simetria</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="bloco">
+      <h3>Achando as raízes com Bhaskara</h3>
+      <p>As <mark>raízes</mark> (ou zeros) são os pontos onde a parábola corta o eixo x. Para achar, iguale a zero: <span class="mat"><i>ax</i>² + <i>bx</i> + <i>c</i> = 0</span>. Depois siga estes 4 passos. Vamos usar o mesmo exemplo, <span class="mat"><i>x</i>² − 4<i>x</i> + 3 = 0</span>.</p>
+      <ol class="passos">
+        <li><div>
+          <strong>Ache a, b e c.</strong>
+          <p class="mat"><i>a</i> = 1, &nbsp;<i>b</i> = −4, &nbsp;<i>c</i> = 3</p>
+        </div></li>
+        <li><div>
+          <strong>Calcule o delta (Δ).</strong>
+          <p>Δ é uma letra grega. Aqui ela é só o nome do resultado desta conta:</p>
+          <p class="mat">Δ = <i>b</i>² − 4 · <i>a</i> · <i>c</i></p>
+          <p class="mat">Δ = (−4)² − 4 · 1 · 3 = 16 − 12 = 4</p>
+        </div></li>
+        <li><div>
+          <strong>Olhe o delta.</strong>
+          <ul class="casos">
+            <li><span class="mat">Δ &gt; 0</span><span>duas raízes (a parábola corta o eixo x em 2 pontos)</span></li>
+            <li><span class="mat">Δ = 0</span><span>uma raiz só (a parábola só encosta no eixo x)</span></li>
+            <li><span class="mat">Δ &lt; 0</span><span>nenhuma raiz real (a parábola não toca o eixo x). Pode parar aqui.</span></li>
+          </ul>
+          <p>Aqui Δ = 4, que é positivo. Então vamos achar <strong>duas</strong> raízes.</p>
+        </div></li>
+        <li><div>
+          <strong>Use a fórmula de Bhaskara.</strong>
+          <p class="mat grande"><i>x</i> = <span class="frac"><span>−<i>b</i> ± √Δ</span><span>2<i>a</i></span></span></p>
+          <p class="mat"><i>x</i> = <span class="frac"><span>−(−4) ± √4</span><span>2 · 1</span></span> = <span class="frac"><span>4 ± 2</span><span>2</span></span></p>
+          <p>O “±” quer dizer: faça uma vez com <strong>+</strong> e outra com <strong>−</strong>.</p>
+          <p class="mat"><i>x</i>′ = (4 + 2) ÷ 2 = 6 ÷ 2 = 3</p>
+          <p class="mat"><i>x</i>″ = (4 − 2) ÷ 2 = 2 ÷ 2 = 1</p>
+        </div></li>
+      </ol>
+      <p>As raízes são <strong>1 e 3</strong>. Confira na tabela lá em cima: f(1) = 0 e f(3) = 0. Bateu!</p>
+      <div class="cuidado">
+        <span class="rotulo">Cuidado</span>
+        <p><span class="mat">(−4)² = (−4) · (−4) = 16</span>, que é <strong>positivo</strong>. Na calculadora, use parênteses.</p>
+        <p>Se b = −4, então <span class="mat">−<i>b</i> = −(−4) = +4</span>. Menos com menos dá mais.</p>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h3>O vértice: o ponto da virada</h3>
+      <p>O <mark>vértice</mark> é onde a parábola faz a curva: o ponto mais baixo (boca para cima) ou o mais alto (boca para baixo). Ele tem duas coordenadas:</p>
+      <ol class="passos">
+        <li><div>
+          <strong>Ache o x do vértice.</strong>
+          <p class="mat"><i>x</i><sub>v</sub> = <span class="frac"><span>−<i>b</i></span><span>2<i>a</i></span></span> = <span class="frac"><span>−(−4)</span><span>2 · 1</span></span> = <span class="frac"><span>4</span><span>2</span></span> = 2</p>
+        </div></li>
+        <li><div>
+          <strong>Ache o y do vértice: coloque esse x na função.</strong>
+          <p class="mat"><i>y</i><sub>v</sub> = <i>f</i>(2) = 2² − 4 · 2 + 3 = 4 − 8 + 3 = −1</p>
+        </div></li>
+      </ol>
+      <p>O vértice é <strong>V = (2, −1)</strong>. Como a boca é para cima, −1 é o <strong>menor valor</strong> que essa função consegue dar.</p>
+      <div class="dica">
+        <span class="rotulo">Dica</span>
+        <p>O x do vértice fica <strong>bem no meio das raízes</strong>: (1 + 3) ÷ 2 = 2. Dá para usar isso para conferir a conta.</p>
+        <p>Alguns livros usam <span class="mat"><i>y</i><sub>v</sub> = −Δ ÷ 4<i>a</i></span>. Dá o mesmo resultado: −4 ÷ 4 = −1.</p>
+      </div>
+    </div>
+
+    <div class="voce">
+      <h3>Agora você</h3>
+      <div class="ex">
+        <p><span class="num">1.</span> Para <span class="mat"><i>f</i>(<i>x</i>) = <i>x</i>² − 6<i>x</i> + 8</span>: ache a, b e c, diga para onde é a boca, calcule as raízes e o vértice.</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>a = 1, b = −6, c = 8. Como a é positivo, a <strong>boca é para cima</strong>.</p>
+            <p class="mat">Δ = (−6)² − 4 · 1 · 8 = 36 − 32 = 4</p>
+            <p class="mat"><i>x</i> = (6 ± 2) ÷ 2 → <i>x</i>′ = 4 e <i>x</i>″ = 2</p>
+            <p class="mat"><i>x</i><sub>v</sub> = 6 ÷ 2 = 3 &nbsp; e &nbsp; <i>y</i><sub>v</sub> = <i>f</i>(3) = 9 − 18 + 8 = −1</p>
+            <p>Raízes: <strong>2 e 4</strong>. Vértice: <strong>(3, −1)</strong>. Repare que 3 está bem no meio de 2 e 4.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">2.</span> Para <span class="mat"><i>f</i>(<i>x</i>) = −<i>x</i>² + 4<i>x</i></span>: para onde é a boca? Quais são as raízes e o vértice?</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p>a = −1, b = 4, c = 0. Como a é negativo, a <strong>boca é para baixo</strong>, então o vértice é o ponto mais alto.</p>
+            <p class="mat">Δ = 4² − 4 · (−1) · 0 = 16 − 0 = 16</p>
+            <p class="mat"><i>x</i> = (−4 ± 4) ÷ (2 · (−1)) = (−4 ± 4) ÷ (−2)</p>
+            <p class="mat"><i>x</i>′ = 0 ÷ (−2) = 0 &nbsp; e &nbsp; <i>x</i>″ = (−8) ÷ (−2) = 4</p>
+            <p class="mat"><i>x</i><sub>v</sub> = −4 ÷ (−2) = 2 &nbsp; e &nbsp; <i>y</i><sub>v</sub> = <i>f</i>(2) = −4 + 8 = 4</p>
+            <p>Raízes: <strong>0 e 4</strong>. Vértice: <strong>(2, 4)</strong>, o ponto mais alto.</p>
+          </div>
+        </details>
+      </div>
+      <div class="ex">
+        <p><span class="num">3.</span> A parábola de <span class="mat"><i>f</i>(<i>x</i>) = <i>x</i>² + 2<i>x</i> + 5</span> corta o eixo x? Descubra só calculando o delta.</p>
+        <details><summary>Ver resposta</summary>
+          <div class="resp">
+            <p class="mat">Δ = 2² − 4 · 1 · 5 = 4 − 20 = −16</p>
+            <p>Delta negativo: <strong>não tem raiz real</strong>. A parábola não toca o eixo x. Como a boca é para cima, ela fica toda acima do eixo.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTE 4 -->
+  <section id="parte4" data-cor="ink">
+    <div class="cab">
+      <p class="eyebrow">Parte 4</p>
+      <h2>Laboratório</h2>
+    </div>
+    <p>Mexa nos controles e veja o gráfico mudar na hora. Tente completar os 6 desafios lá embaixo.</p>
+
+    <div class="lab" id="lab">
+      <div class="modo" role="group" aria-label="Tipo de função">
+        <button id="modoAfim" type="button" aria-pressed="true">Reta (afim)</button>
+        <button id="modoQuad" type="button" aria-pressed="false">Parábola (quadrática)</button>
+      </div>
+      <p id="labEq">f(x) = 2x − 4</p>
+      <div class="ctrl"><label for="labA">a</label><input id="labA" type="range" min="-3" max="3" step="0.5" value="2"><output id="labAo" for="labA">2</output></div>
+      <div class="ctrl"><label for="labB">b</label><input id="labB" type="range" min="-6" max="6" step="1" value="-4"><output id="labBo" for="labB">−4</output></div>
+      <div class="ctrl" id="labCrow" hidden><label for="labC">c</label><input id="labC" type="range" min="-6" max="6" step="1" value="3"><output id="labCo" for="labC">3</output></div>
+      <figure class="graf" style="border:0;padding:0">
+        <svg id="labG" role="img" aria-label="Gráfico da função escolhida no laboratório"></svg>
+        <figcaption><span><span class="dot" style="background:var(--ink)"></span>corta o eixo y</span><span><span class="dot" style="background:var(--amber)"></span>zeros / raízes</span><span><span class="dot" style="background:var(--violet)"></span>vértice</span></figcaption>
+      </figure>
+      <div class="chips" id="labInfo"></div>
+    </div>
+
+    <div class="desafios">
+      <div>
+        <h3>Desafios com a reta</h3>
+        <ul>
+          <li id="c1"><span>Faça uma reta que desce</span><span class="st">A fazer</span></li>
+          <li id="c2"><span>Faça a reta passar pelo ponto (0, 0)</span><span class="st">A fazer</span></li>
+          <li id="c3"><span>Faça uma reta deitada, que não sobe nem desce</span><span class="st">A fazer</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Desafios com a parábola</h3>
+        <ul>
+          <li id="c4"><span>Faça uma parábola com a boca para baixo</span><span class="st">A fazer</span></li>
+          <li id="c5"><span>Faça uma parábola que não toca o eixo x</span><span class="st">A fazer</span></li>
+          <li id="c6"><span>Faça uma parábola que só encosta no eixo x em um ponto</span><span class="st">A fazer</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted" aria-live="polite"><span id="desCount">0</span> de 6 desafios feitos. <span id="parabens" hidden>Mandou bem, completou todos!</span></p>
+  </section>
+
+  <!-- PARTE 5 -->
+  <section id="parte5" data-cor="ink">
+    <div class="cab">
+      <p class="eyebrow">Parte 5</p>
+      <h2>Resumão para revisar</h2>
+    </div>
+    <div class="cola">
+      <div class="card" style="--c:var(--blue)">
+        <h3>Função afim</h3>
+        <dl>
+          <div><dt>Cara</dt><dd class="mat"><i>f</i>(<i>x</i>) = <i>ax</i> + <i>b</i></dd></div>
+          <div><dt>Gráfico</dt><dd>Reta</dd></div>
+          <div><dt>Sinal do a</dt><dd>a positivo: sobe. a negativo: desce.</dd></div>
+          <div><dt>Eixo y</dt><dd>Corta em (0, b)</dd></div>
+          <div><dt>Zero</dt><dd>Resolva <span class="mat"><i>ax</i> + <i>b</i> = 0</span> (ou <span class="mat"><i>x</i> = −<i>b</i> ÷ <i>a</i></span>)</dd></div>
+        </dl>
+      </div>
+      <div class="card" style="--c:var(--green)">
+        <h3>Função quadrática</h3>
+        <dl>
+          <div><dt>Cara</dt><dd class="mat"><i>f</i>(<i>x</i>) = <i>ax</i>² + <i>bx</i> + <i>c</i>, com <i>a</i> ≠ 0</dd></div>
+          <div><dt>Gráfico</dt><dd>Parábola</dd></div>
+          <div><dt>Sinal do a</dt><dd>a positivo: boca para cima (mínimo). a negativo: boca para baixo (máximo).</dd></div>
+          <div><dt>Eixo y</dt><dd>Corta em (0, c)</dd></div>
+          <div><dt>Raízes</dt><dd><span class="mat">Δ = <i>b</i>² − 4<i>ac</i></span>, depois <span class="mat"><i>x</i> = (−<i>b</i> ± √Δ) ÷ 2<i>a</i></span></dd></div>
+          <div><dt>Vértice</dt><dd><span class="mat"><i>x</i><sub>v</sub> = −<i>b</i> ÷ 2<i>a</i></span>, e <span class="mat"><i>y</i><sub>v</sub> = <i>f</i>(<i>x</i><sub>v</sub>)</span></dd></div>
+        </dl>
+      </div>
+    </div>
+    <div class="cuidado">
+      <span class="rotulo">Erros que mais caem na prova</span>
+      <ol class="erros">
+        <li>Pegar o a errado quando a função está fora de ordem. Em <span class="mat">5 − 2<i>x</i></span>, o a é −2.</li>
+        <li>Esquecer que <span class="mat">(−4)²</span> dá <strong>positivo</strong> (16).</li>
+        <li>Errar o sinal do <span class="mat">−<i>b</i></span>. Se b é negativo, −b fica positivo.</li>
+        <li>Achar que delta negativo é erro de conta. Ele só quer dizer que não tem raiz real.</li>
+        <li>Dividir só um pedaço pelo 2a. O traço da fração fica embaixo de <strong>tudo</strong>: de −b e de √Δ.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  function fmt(n){
+    var r = Math.round(n*100)/100;
+    if (Object.is(r,-0)) r = 0;
+    return String(r).replace('.',',').replace('-','−');
+  }
+  function ponto(x,y){
+    var a = fmt(x), b = fmt(y);
+    var sep = (a.indexOf(',')>-1 || b.indexOf(',')>-1) ? '; ' : ', ';
+    return '(' + a + sep + b + ')';
+  }
+
+  function plot(svg, o){
+    var W = o.w || 440, H = o.h || 300, mini = !!o.mini;
+    var ml = mini?6:32, mr = mini?6:14, mt = mini?6:14, mb = mini?6:26;
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    function sx(x){ return ml + (x-o.xmin)/(o.xmax-o.xmin)*(W-ml-mr); }
+    function sy(y){ return H - mb - (y-o.ymin)/(o.ymax-o.ymin)*(H-mt-mb); }
+    var s = '', cid = svg.id + '-clip';
+    s += '<defs><clipPath id="'+cid+'"><rect x="'+ml+'" y="'+mt+'" width="'+(W-ml-mr)+'" height="'+(H-mt-mb)+'"/></clipPath></defs>';
+    var xs = o.xstep || 1, ys = o.ystep || 1, x, y;
+    if (!o.nogrid){
+      for (x = Math.ceil(o.xmin/xs)*xs; x <= o.xmax+1e-9; x += xs) s += '<line x1="'+sx(x)+'" y1="'+mt+'" x2="'+sx(x)+'" y2="'+(H-mb)+'" class="g-grid"/>';
+      for (y = Math.ceil(o.ymin/ys)*ys; y <= o.ymax+1e-9; y += ys) s += '<line x1="'+ml+'" y1="'+sy(y)+'" x2="'+(W-mr)+'" y2="'+sy(y)+'" class="g-grid"/>';
+    }
+    var ax = (o.ymin<=0 && o.ymax>=0) ? sy(0) : sy(o.ymin);
+    var ay = (o.xmin<=0 && o.xmax>=0) ? sx(0) : sx(o.xmin);
+    s += '<line x1="'+ml+'" y1="'+ax+'" x2="'+(W-mr)+'" y2="'+ax+'" class="g-axis"/>';
+    s += '<line x1="'+ay+'" y1="'+mt+'" x2="'+ay+'" y2="'+(H-mb)+'" class="g-axis"/>';
+    if (!mini){
+      var xl = o.xlab || xs, yl = o.ylab || ys;
+      for (x = Math.ceil(o.xmin/xl)*xl; x <= o.xmax+1e-9; x += xl){
+        if (Math.abs(x)<1e-9 && o.xmin<0) continue;
+        s += '<text x="'+sx(x)+'" y="'+(ax+17)+'" class="g-lab" text-anchor="middle">'+fmt(x)+'</text>';
+      }
+      for (y = Math.ceil(o.ymin/yl)*yl; y <= o.ymax+1e-9; y += yl){
+        if (Math.abs(y)<1e-9) continue;
+        s += '<text x="'+(ay-6)+'" y="'+(sy(y)+4)+'" class="g-lab" text-anchor="end">'+fmt(y)+'</text>';
+      }
+      if (o.xname) s += '<text x="'+(W-mr)+'" y="'+(ax-7)+'" class="g-name" text-anchor="end">'+o.xname+'</text>';
+      if (o.yname) s += '<text x="'+(ay+7)+'" y="'+(mt+12)+'" class="g-name">'+o.yname+'</text>';
+    }
+    if (o.vline !== undefined && o.vline !== null && o.vline>=o.xmin && o.vline<=o.xmax){
+      s += '<line x1="'+sx(o.vline)+'" y1="'+mt+'" x2="'+sx(o.vline)+'" y2="'+(H-mb)+'" class="g-sim"/>';
+    }
+    (o.fns||[]).forEach(function(fn){
+      var d = '', on = false, n = 300;
+      for (var i=0;i<=n;i++){
+        var xx = o.xmin + (o.xmax-o.xmin)*i/n, yy = fn.f(xx);
+        if (isFinite(yy) && yy > o.ymin-50 && yy < o.ymax+50){
+          d += (on?'L':'M') + sx(xx).toFixed(1) + ' ' + sy(yy).toFixed(1) + ' ';
+          on = true;
+        } else on = false;
+      }
+      s += '<path d="'+d+'" clip-path="url(#'+cid+')" style="fill:none;stroke:'+fn.color+';stroke-width:'+(fn.w||3)+'px;stroke-linecap:round;stroke-linejoin:round"/>';
+    });
+    (o.points||[]).forEach(function(p){
+      if (p.x<o.xmin-1e-9 || p.x>o.xmax+1e-9 || p.y<o.ymin-1e-9 || p.y>o.ymax+1e-9) return;
+      s += '<circle cx="'+sx(p.x)+'" cy="'+sy(p.y)+'" r="'+(p.r||6)+'" style="fill:'+p.color+';stroke:var(--sheet);stroke-width:2px"/>';
+      if (p.label) s += '<text x="'+(sx(p.x)+(p.dx||0))+'" y="'+(sy(p.y)+(p.dy||0))+'" text-anchor="'+(p.anchor||'start')+'" class="g-pt">'+p.label+'</text>';
+    });
+    svg.innerHTML = s;
+  }
+
+  // Desenho do topo
+  plot(document.getElementById('heroG'), {w:320,h:260,mini:true,nogrid:true,xmin:-4,xmax:4,ymin:-3,ymax:4.5,
+    fns:[{f:function(x){return 0.7*x+0.6;},color:'var(--blue)',w:4},{f:function(x){return 0.55*x*x-2;},color:'var(--green)',w:4}]});
+
+  // Gráficos estáticos
+  plot(document.getElementById('gTaxi'), {xmin:0,xmax:6,ymin:0,ymax:18,ystep:2,xlab:1,ylab:2,xname:'km',yname:'R$',
+    fns:[{f:function(x){return 2*x+5;},color:'var(--blue)'}],
+    points:[{x:0,y:5,color:'var(--ink)',label:'começa em 5',dx:10,dy:-8},
+      {x:1,y:7,color:'var(--blue)',r:4.5},{x:2,y:9,color:'var(--blue)',r:4.5},{x:3,y:11,color:'var(--blue)',r:4.5},{x:4,y:13,color:'var(--blue)',r:4.5}]});
+  plot(document.getElementById('gZero'), {xmin:-2,xmax:6,ymin:-7,ymax:5,
+    fns:[{f:function(x){return 2*x-6;},color:'var(--blue)'}],
+    points:[{x:0,y:-6,color:'var(--ink)',label:'corta o y em −6',dx:12,dy:16},
+      {x:3,y:0,color:'var(--amber)',label:'zero: x = 3',dx:12,dy:20}]});
+  var miniOpt = function(f,c){ return {w:200,h:150,mini:true,xmin:-3,xmax:3,ymin:-2.25,ymax:2.25,fns:[{f:f,color:c}]}; };
+  plot(document.getElementById('gSobe'), miniOpt(function(x){return 0.65*x;},'var(--blue)'));
+  plot(document.getElementById('gDesce'), miniOpt(function(x){return -0.65*x;},'var(--blue)'));
+  plot(document.getElementById('gFeliz'), miniOpt(function(x){return 0.45*x*x-1.6;},'var(--green)'));
+  plot(document.getElementById('gTriste'), miniOpt(function(x){return -0.45*x*x+1.6;},'var(--green)'));
+  plot(document.getElementById('gPara'), {xmin:-1,xmax:5,ymin:-2,ymax:8,ylab:2,vline:2,
+    fns:[{f:function(x){return x*x-4*x+3;},color:'var(--green)'}],
+    points:[{x:0,y:3,color:'var(--ink)',label:'c = 3',dx:10,dy:-8},
+      {x:4,y:3,color:'var(--green)',r:4.5},
+      {x:1,y:0,color:'var(--amber)',label:'(1, 0)',dx:-10,dy:20,anchor:'end'},
+      {x:3,y:0,color:'var(--amber)',label:'(3, 0)',dx:10,dy:20},
+      {x:2,y:-1,color:'var(--violet)',label:'V = (2, −1)',dx:12,dy:5}]});
+
+  // Máquina
+  var mx = document.getElementById('maqX'), mIn = document.getElementById('maqIn'), mOut = document.getElementById('maqOut');
+  var mErr = document.getElementById('maqErr'), mConta = document.getElementById('maqConta');
+  function maquina(){
+    var raw = mx.value.trim().replace(',','.').replace('−','-');
+    if (raw === '' || isNaN(Number(raw))){
+      mErr.hidden = false; mIn.textContent = '?'; mOut.textContent = '?'; mConta.textContent = '';
+      return;
+    }
+    mErr.hidden = true;
+    var x = Number(raw), d = 2*x;
+    var px = x<0 ? '(' + fmt(x) + ')' : fmt(x);
+    mIn.textContent = fmt(x); mOut.textContent = fmt(d+1);
+    mConta.textContent = 'f(' + fmt(x) + ') = 2 · ' + px + ' + 1 = ' + fmt(d) + ' + 1 = ' + fmt(d+1);
+  }
+
+  // Laboratório
+  var st = {mode:'afim', done:{}};
+  var $ = function(id){ return document.getElementById(id); };
+  var A = $('labA'), B = $('labB'), C = $('labC');
+  function termo(coef, v, primeiro){
+    if (coef === 0) return '';
+    var neg = coef < 0, ab = Math.abs(coef);
+    var num = (ab === 1 && v) ? '' : fmt(ab);
+    return (neg ? (primeiro ? '−' : ' − ') : (primeiro ? '' : ' + ')) + num + v;
+  }
+  function equacao(a,b,c){
+    var s = '';
+    if (st.mode === 'quad'){ s += termo(a,'x²',s===''); s += termo(b,'x',s===''); s += termo(c,'',s===''); }
+    else { s += termo(a,'x',s===''); s += termo(b,'',s===''); }
+    return 'f(x) = ' + (s || '0');
+  }
+  function feito(id){
+    if (st.done[id]) return;
+    st.done[id] = true;
+    var li = $(id); li.classList.add('ok'); li.querySelector('.st').textContent = 'Feito';
+    var n = Object.keys(st.done).length;
+    $('desCount').textContent = n;
+    $('parabens').hidden = n < 6;
+  }
+  function lab(){
+    var a = Number(A.value), b = Number(B.value), c = Number(C.value);
+    var quad = st.mode === 'quad';
+    $('labAo').textContent = fmt(a); $('labBo').textContent = fmt(b); $('labCo').textContent = fmt(c);
+    $('labEq').textContent = equacao(a,b,c);
+    var f = quad ? function(x){ return a*x*x + b*x + c; } : function(x){ return a*x + b; };
+    var pts = [], chips = [], vline = null;
+    if (!quad){
+      pts.push({x:0,y:b,color:'var(--ink)'});
+      chips.push(['Direção', a>0 ? 'Sobe (crescente)' : a<0 ? 'Desce (decrescente)' : 'Deitada (constante)']);
+      chips.push(['Corta o eixo y', ponto(0,b)]);
+      if (a !== 0){ var r = -b/a; pts.push({x:r,y:0,color:'var(--amber)'}); chips.push(['Zero da função','x = '+fmt(r)]); }
+      else chips.push(['Zero da função', b===0 ? 'todo x' : 'não tem']);
+      if (a<0) feito('c1');
+      if (a!==0 && b===0) feito('c2');
+      if (a===0) feito('c3');
+    } else if (a === 0){
+      chips.push(['Atenção','Com a = 0 não tem x², então vira reta']);
+    } else {
+      var D = b*b - 4*a*c, xv = -b/(2*a), yv = f(xv);
+      pts.push({x:0,y:c,color:'var(--ink)'});
+      chips.push(['Boca', a>0 ? 'Para cima' : 'Para baixo']);
+      chips.push(['Delta','Δ = '+fmt(D)]);
+      if (D > 0){
+        var r1 = (-b-Math.sqrt(D))/(2*a), r2 = (-b+Math.sqrt(D))/(2*a);
+        pts.push({x:r1,y:0,color:'var(--amber)'},{x:r2,y:0,color:'var(--amber)'});
+        chips.push(['Raízes', fmt(Math.min(r1,r2)) + ' e ' + fmt(Math.max(r1,r2))]);
+      } else if (D === 0){
+        pts.push({x:xv,y:0,color:'var(--amber)'});
+        chips.push(['Raízes','só uma: x = '+fmt(xv)]);
+      } else chips.push(['Raízes','nenhuma (não toca o eixo x)']);
+      pts.push({x:xv,y:yv,color:'var(--violet)'});
+      chips.push(['Vértice', ponto(xv,yv)]);
+      vline = xv;
+      if (a<0) feito('c4');
+      if (D<0) feito('c5');
+      if (D===0) feito('c6');
+    }
+    plot($('labG'), {h:337,xmin:-8,xmax:8,ymin:-6,ymax:6,xlab:2,ylab:2,vline:vline,
+      fns:[{f:f,color: quad ? 'var(--green)' : 'var(--blue)'}], points:pts});
+    $('labInfo').innerHTML = chips.map(function(k){ return '<div class="chip"><span>'+k[0]+'</span><strong>'+k[1]+'</strong></div>'; }).join('');
+  }
+  function mostrarModo(m){
+    st.mode = m;
+    var quad = m === 'quad';
+    $('modoAfim').setAttribute('aria-pressed', String(!quad));
+    $('modoQuad').setAttribute('aria-pressed', String(quad));
+    $('lab').classList.toggle('quad', quad);
+    $('labCrow').hidden = !quad;
+  }
+  function modo(m){
+    mostrarModo(m);
+    if (m === 'quad'){ A.value = 1; B.value = -4; C.value = 3; } else { A.value = 2; B.value = -4; }
+    lab();
+  }
+
+  $('modoAfim').addEventListener('click', function(){ modo('afim'); });
+  $('modoQuad').addEventListener('click', function(){ modo('quad'); });
+  [A,B,C].forEach(function(el){ el.addEventListener('input', lab); });
+  mx.addEventListener('input', maquina);
+  modo('afim');
+
+  /* Integração com o aplicativo da aula (opcional).
+     Cliques, campos e respostas abertas já são sincronizados sozinhos pelo aplicativo.
+     Isto só serve para quem entra no meio da aula receber o laboratório e a máquina como estão. */
+  window.aulaEstado = {
+    obter: function(){
+      return {lab:{mode:st.mode, a:Number(A.value), b:Number(B.value), c:Number(C.value)}, maq:mx.value};
+    },
+    aplicar: function(s){
+      if (!s) return;
+      var l = s.lab;
+      if (l && (l.mode === 'afim' || l.mode === 'quad')){
+        mostrarModo(l.mode);
+        A.value = l.a; B.value = l.b; C.value = l.c;
+        lab();
+      }
+      if (typeof s.maq === 'string'){ mx.value = s.maq.slice(0, 12); maquina(); }
+    }
+  };
+})();
+</script>
+</body>
+</html>

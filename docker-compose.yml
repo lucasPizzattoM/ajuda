@@ -1,15 +1,22 @@
 services:
-  # Servidor da aula em PHP: entrega a página e repassa os desenhos em tempo real.
-  # Quem recebe as visitas e cuida do HTTPS é o Traefik que já roda na VPS;
-  # as etiquetas (labels) abaixo avisam o Traefik qual subdomínio vem para cá.
+  # Servidor da Lousa ao vivo (PHP): entrega o aplicativo, guarda a biblioteca
+  # e repassa os desenhos em tempo real. O HTTPS fica com o Traefik que já roda na VPS.
   app:
     build: ./app
     restart: unless-stopped
-    volumes:
-      - ./app/server.php:/app/server.php:ro
-      - ./app/public:/app/public:ro
     expose:
       - "8080"
+    environment:
+      # Senha para importar, editar e apagar documentos. Fica no .env da VPS, nunca no GitHub.
+      - SENHA_PROFESSOR=${SENHA_PROFESSOR:-}
+    volumes:
+      # Biblioteca de documentos: sobrevive a atualizações e reinícios.
+      - dados:/dados
+      # Código do aplicativo direto do repositório: depois de um git pull,
+      # mudanças na página valem na hora e no server.php basta reiniciar o app.
+      - ./app/public:/app/public:ro
+      - ./app/server.php:/app/server.php:ro
+      - ./app/aulas:/app/aulas:ro
     labels:
       - traefik.enable=true
       - traefik.http.routers.aula-funcoes.entrypoints=websecure
@@ -17,3 +24,6 @@ services:
       - traefik.http.routers.aula-funcoes.tls=true
       - traefik.http.routers.aula-funcoes.tls.certresolver=letsencrypt
       - traefik.http.services.aula-funcoes.loadbalancer.server.port=8080
+
+volumes:
+  dados:

@@ -1,27 +1,35 @@
 <?php
 /*
- * Servidor da aula ao vivo.
+ * Servidor da Lousa ao vivo.
  *
- * Entrega a página (public/index.html) e repassa, em tempo real, os desenhos e cliques
- * entre quem está na mesma sala. Fala HTTP e WebSocket na mesma porta.
+ * - Entrega o aplicativo (public/) e os documentos da biblioteca (/doc/ID).
+ * - Guarda a biblioteca de documentos HTML em DADOS (um volume do Docker).
+ * - Importar, editar e apagar documentos pede a senha SENHA_PROFESSOR.
+ * - Repassa em tempo real, por WebSocket (/ws), os desenhos e cliques de quem está na mesma aula.
+ *
  * Não precisa de nenhuma biblioteca: só PHP 8.1 ou mais novo (linha de comando).
  *
- *   php server.php            (porta 8080)
- *   PORTA=9000 php server.php
+ *   SENHA_PROFESSOR=uma-senha-longa DADOS=/tmp/dados php server.php
  */
 declare(strict_types=1);
 
 const GUID_WS        = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-const MAX_MENSAGEM   = 1048576;   // 1 MB por mensagem
+const MAX_MENSAGEM   = 1048576;   // 1 MB por mensagem ao vivo
 const MAX_CABECALHO  = 16384;     // 16 KB de cabeçalho HTTP
-const MAX_SAIDA      = 8388608;   // 8 MB esperando para sair (cliente muito lento é derrubado)
+const MAX_CORPO      = 20971520;  // 20 MB por documento importado
+const MAX_SAIDA_WS   = 8388608;   // 8 MB esperando para sair numa conexão ao vivo
 const MAX_CONEXOES   = 400;
 const MAX_POR_SALA   = 30;
-const LIMITE_MSGS    = 1500;      // mensagens por pessoa a cada JANELA segundos
+const MAX_DOCS       = 300;
+const LIMITE_MSGS    = 1500;      // mensagens ao vivo por pessoa a cada JANELA segundos
 const JANELA         = 10;
 const PING_A_CADA    = 25;        // segundos
-const TIMEOUT_WS     = 75;        // sem notícias por esse tempo, a conexão é fechada
-const TIMEOUT_HTTP   = 15;
+const TIMEOUT_WS     = 75;        // conexão ao vivo sem notícias por esse tempo é fechada
+const TIMEOUT_HTTP   = 30;
+const TOKEN_DIAS     = 30;        // por quanto tempo o login de professor vale
+const MAX_FALHAS     = 10;        // senhas erradas por IP a cada JANELA_FALHAS segundos
+const JANELA_FALHAS  = 900;
+const LARGURA_PADRAO = 430;
 
 final class Servidor
 {
@@ -31,14 +39,22 @@ final class Servidor
     private array $c = [];
     /** @var array<string, array<int, true>> */
     private array $salas = [];
+    /** @var array<string, int[]> */
+    private array $falhas = [];
     private float $ultimaManutencao = 0.0;
 
-    public function __construct(private int $porta, private string $publico)
-    {
+    public function __construct(
+        private int $porta,
+        private string $publico,
+        private string $aulas,
+        private string $dados,
+        private string $senha
+    ) {
     }
 
     public function rodar(): void
     {
+        $this->prepararBiblioteca();
         $ctx = stream_context_create(['socket' => ['backlog' => 128, 'tcp_nodelay' => true]]);
         $s = @stream_socket_server("tcp://0.0.0.0:{$this->porta}", $errno, $errstr,
             STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $ctx);
@@ -48,7 +64,12 @@ final class Servidor
         }
         stream_set_blocking($s, false);
         $this->servidor = $s;
-        $this->log("Aula ao vivo rodando na porta {$this->porta}");
+        $this->log("Lousa ao vivo rodando na porta {$this->porta}");
+        if ($this->senha === '') {
+            $this->log('Aviso: SENHA_PROFESSOR não foi definida. Importar documentos está desligado.');
+        } elseif (strlen($this->senha) < 8) {
+            $this->log('Aviso: SENHA_PROFESSOR tem menos de 8 caracteres. Use uma senha mais longa.');
+        }
         while (true) {
             $this->volta();
         }
@@ -90,7 +111,7 @@ final class Servidor
                 $this->c[$k]['visto'] = microtime(true);
                 if ($this->c[$k]['ws']) {
                     $this->lerFrames($k);
-                } else {
+                } elseif (!$this->c[$k]['fechar']) {
                     $this->lerHttp($k);
                 }
             }
@@ -122,7 +143,8 @@ final class Servidor
             stream_set_blocking($s, false);
             $agora = microtime(true);
             $this->c[get_resource_id($s)] = [
-                'sock' => $s, 'in' => '', 'out' => '', 'ws' => false, 'fechar' => false,
+                'sock' => $s, 'in' => '', 'out' => '', 'ws' => false, 'fechar' => false, 'req' => null,
+                'peer' => (string) preg_replace('/:\d+$/', '', (string) $peer),
                 'frag' => null, 'sala' => null, 'id' => null, 'nome' => '', 'papel' => 'aluno',
                 'visto' => $agora, 'ping' => $agora, 'janela' => $agora, 'qtd' => 0,
             ];
@@ -133,71 +155,476 @@ final class Servidor
 
     private function lerHttp(int $k): void
     {
-        $buf = $this->c[$k]['in'];
-        $fim = strpos($buf, "\r\n\r\n");
-        if ($fim === false) {
-            if (strlen($buf) > MAX_CABECALHO) {
-                $this->responderHttp($k, 431, 'text/plain; charset=utf-8', 'Cabeçalho grande demais');
+        if ($this->c[$k]['req'] === null) {
+            $buf = $this->c[$k]['in'];
+            $fim = strpos($buf, "\r\n\r\n");
+            if ($fim === false) {
+                if (strlen($buf) > MAX_CABECALHO) {
+                    $this->responderTexto($k, 431, 'Cabeçalho grande demais');
+                }
+                return;
             }
-            return;
-        }
-        $this->c[$k]['in'] = (string) substr($buf, $fim + 4);
-        $linhas = explode("\r\n", substr($buf, 0, $fim));
-        $req = explode(' ', (string) array_shift($linhas));
-        if (count($req) < 3) {
-            $this->responderHttp($k, 400, 'text/plain; charset=utf-8', 'Pedido inválido');
-            return;
-        }
-        [$metodo, $alvo] = $req;
-        $h = [];
-        foreach ($linhas as $l) {
-            $p = strpos($l, ':');
-            if ($p) {
-                $h[strtolower(trim(substr($l, 0, $p)))] = trim(substr($l, $p + 1));
+            $this->c[$k]['in'] = (string) substr($buf, $fim + 4);
+            $linhas = explode("\r\n", substr($buf, 0, $fim));
+            $req = explode(' ', (string) array_shift($linhas));
+            if (count($req) < 3) {
+                $this->responderTexto($k, 400, 'Pedido inválido');
+                return;
             }
-        }
-        $caminho = (string) (parse_url($alvo, PHP_URL_PATH) ?: '/');
-
-        if ($caminho === '/ws') {
-            $this->aceitarWs($k, $h);
-            return;
-        }
-        if ($metodo !== 'GET' && $metodo !== 'HEAD') {
-            $this->responderHttp($k, 405, 'text/plain; charset=utf-8', 'Método não permitido');
-            return;
-        }
-        $soCabecalho = $metodo === 'HEAD';
-        if ($caminho === '/' || $caminho === '/index.html') {
-            $html = @file_get_contents($this->publico . '/index.html');
-            if ($html === false) {
-                $this->responderHttp($k, 500, 'text/plain; charset=utf-8', 'Página não encontrada no servidor');
-            } else {
-                $this->responderHttp($k, 200, 'text/html; charset=utf-8', $html, $soCabecalho);
+            $h = [];
+            foreach ($linhas as $l) {
+                $p = strpos($l, ':');
+                if ($p) {
+                    $h[strtolower(trim(substr($l, 0, $p)))] = trim(substr($l, $p + 1));
+                }
             }
+            $caminho = (string) (parse_url($req[1], PHP_URL_PATH) ?: '/');
+            if ($caminho === '/ws') {
+                $this->aceitarWs($k, $h);
+                return;
+            }
+            if (isset($h['transfer-encoding'])) {
+                $this->responderJson($k, 411, ['erro' => 'Envie o arquivo com Content-Length.']);
+                return;
+            }
+            $tam = (int) ($h['content-length'] ?? 0);
+            if ($tam < 0 || $tam > MAX_CORPO) {
+                $this->responderJson($k, 413, ['erro' => 'O arquivo passa de 20 MB.']);
+                return;
+            }
+            $this->c[$k]['req'] = ['metodo' => strtoupper($req[0]), 'caminho' => $caminho, 'h' => $h, 'tam' => $tam];
+        }
+        $req = $this->c[$k]['req'];
+        if (strlen($this->c[$k]['in']) < $req['tam']) {
             return;
         }
-        if ($caminho === '/saude') {
-            $this->responderHttp($k, 200, 'text/plain; charset=utf-8', "ok\n", $soCabecalho);
-            return;
-        }
-        $this->responderHttp($k, 404, 'text/plain; charset=utf-8', 'Não encontrado', $soCabecalho);
+        $corpo = (string) substr($this->c[$k]['in'], 0, $req['tam']);
+        $this->c[$k]['in'] = '';
+        $this->rotear($k, $req['metodo'], $req['caminho'], $req['h'], $corpo);
     }
 
-    private function responderHttp(int $k, int $codigo, string $tipo, string $corpo, bool $soCabecalho = false): void
+    /** @param array<string, string> $h */
+    private function rotear(int $k, string $m, string $p, array $h, string $corpo): void
     {
-        $textos = [200 => 'OK', 400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found',
-            405 => 'Method Not Allowed', 431 => 'Request Header Fields Too Large', 500 => 'Internal Server Error'];
+        $leitura = $m === 'GET' || $m === 'HEAD';
+        $soCab = $m === 'HEAD';
+
+        if ($p === '/' || $p === '/index.html') {
+            $leitura ? $this->servirArquivo($k, 'index.html', $soCab) : $this->metodoErrado($k);
+            return;
+        }
+        if (preg_match('#^/([a-z0-9-]+\.(?:js|css|txt|svg|png|ico|webp))$#', $p, $mm) && is_file($this->publico . '/' . $mm[1])) {
+            $leitura ? $this->servirArquivo($k, $mm[1], $soCab) : $this->metodoErrado($k);
+            return;
+        }
+        if ($p === '/modelo.html') {
+            $leitura ? $this->servirModelo($k, $soCab) : $this->metodoErrado($k);
+            return;
+        }
+        if ($p === '/saude') {
+            $this->responderTexto($k, 200, "ok\n", $soCab);
+            return;
+        }
+        if (preg_match('#^/doc/([a-z0-9]{10})$#', $p, $mm)) {
+            $leitura ? $this->servirDoc($k, $mm[1], $soCab) : $this->metodoErrado($k);
+            return;
+        }
+        if ($p === '/api/docs') {
+            if ($m === 'GET') {
+                $this->responderJson($k, 200, ['docs' => $this->lerBiblioteca()]);
+            } elseif ($m === 'POST') {
+                $this->importar($k, $h, $corpo);
+            } else {
+                $this->metodoErrado($k);
+            }
+            return;
+        }
+        if (preg_match('#^/api/docs/([a-z0-9]{10})$#', $p, $mm)) {
+            if ($m === 'POST') {
+                $this->editar($k, $h, $mm[1], $corpo);
+            } elseif ($m === 'DELETE') {
+                $this->apagar($k, $h, $mm[1]);
+            } else {
+                $this->metodoErrado($k);
+            }
+            return;
+        }
+        if ($p === '/api/login') {
+            $m === 'POST' ? $this->login($k, $h, $corpo) : $this->metodoErrado($k);
+            return;
+        }
+        if ($p === '/api/sessao') {
+            if ($this->autorizado($h)) {
+                $this->responderJson($k, 200, ['ok' => true]);
+            } else {
+                $this->responderJson($k, 401, ['erro' => 'Sessão de professor expirada.']);
+            }
+            return;
+        }
+        $this->responderTexto($k, 404, 'Não encontrado', $soCab);
+    }
+
+    private function servirArquivo(int $k, string $nome, bool $soCab): void
+    {
+        $tipos = ['html' => 'text/html; charset=utf-8', 'js' => 'text/javascript; charset=utf-8',
+            'css' => 'text/css; charset=utf-8', 'txt' => 'text/plain; charset=utf-8', 'svg' => 'image/svg+xml', 'png' => 'image/png',
+            'ico' => 'image/x-icon', 'webp' => 'image/webp'];
+        $conteudo = @file_get_contents($this->publico . '/' . $nome);
+        if ($conteudo === false) {
+            $this->responderTexto($k, 500, 'Arquivo não encontrado no servidor');
+            return;
+        }
+        $ext = (string) pathinfo($nome, PATHINFO_EXTENSION);
+        $this->responder($k, 200, $tipos[$ext] ?? 'application/octet-stream', $conteudo, $soCab);
+    }
+
+    /* O modelo de aula, para baixar ou anexar ao prompt. */
+    private function servirModelo(int $k, bool $soCab): void
+    {
+        $html = @file_get_contents($this->aulas . '/modelo.html');
+        if ($html === false) {
+            $this->responderTexto($k, 404, 'Modelo não encontrado', $soCab);
+            return;
+        }
+        $this->responder($k, 200, 'text/html; charset=utf-8', $html, $soCab, [
+            'Content-Disposition' => 'attachment; filename="modelo-de-aula.html"',
+            'Content-Security-Policy' => 'sandbox allow-scripts',
+        ]);
+    }
+
+    private function servirDoc(int $k, string $id, bool $soCab): void
+    {
+        $html = @file_get_contents($this->arquivoDoc($id));
+        $codigo = 200;
+        if ($html === false) {
+            $codigo = 404;
+            $html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Documento não encontrado</title></head>'
+                . '<body style="font:16px/1.5 system-ui,sans-serif;padding:2rem;margin:0">'
+                . '<h1 style="font-size:1.4rem">Esse documento não existe mais.</h1>'
+                . '<p>Ele pode ter sido apagado da biblioteca. Escolha outro em Documentos.</p></body></html>';
+        }
+        $temCharset = (bool) preg_match('/<meta[^>]+charset/i', substr($html, 0, 4096));
+        $this->responder($k, $codigo, 'text/html' . ($temCharset ? '' : '; charset=utf-8'), $this->injetarPonte($html), $soCab, [
+            /* O documento roda isolado: não enxerga o login nem os dados do aplicativo. */
+            'Content-Security-Policy' => 'sandbox allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals',
+        ]);
+    }
+
+    private function injetarPonte(string $html): string
+    {
+        $tag = '<script src="/ponte.js"></script>';
+        foreach (['/<head\b[^>]*>/i', '/<html\b[^>]*>/i'] as $re) {
+            if (preg_match($re, $html, $m, PREG_OFFSET_CAPTURE)) {
+                $pos = $m[0][1] + strlen($m[0][0]);
+                return substr($html, 0, $pos) . $tag . substr($html, $pos);
+            }
+        }
+        if (preg_match('/^\s*<!doctype[^>]*>/i', $html, $m)) {
+            return $m[0] . $tag . substr($html, strlen($m[0]));
+        }
+        return $tag . $html;
+    }
+
+    private function metodoErrado(int $k): void
+    {
+        $this->responderJson($k, 405, ['erro' => 'Método não permitido']);
+    }
+
+    private function responderTexto(int $k, int $codigo, string $texto, bool $soCab = false): void
+    {
+        $this->responder($k, $codigo, 'text/plain; charset=utf-8', $texto, $soCab);
+    }
+
+    /** @param array<string, mixed> $dados */
+    private function responderJson(int $k, int $codigo, array $dados): void
+    {
+        $json = json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $this->responder($k, $codigo, 'application/json; charset=utf-8', $json === false ? '{}' : $json);
+    }
+
+    /** @param array<string, string> $extra */
+    private function responder(int $k, int $codigo, string $tipo, string $corpo, bool $soCab = false, array $extra = []): void
+    {
+        $textos = [200 => 'OK', 201 => 'Created', 400 => 'Bad Request', 401 => 'Unauthorized', 403 => 'Forbidden',
+            404 => 'Not Found', 405 => 'Method Not Allowed', 411 => 'Length Required', 413 => 'Payload Too Large',
+            429 => 'Too Many Requests', 431 => 'Request Header Fields Too Large', 500 => 'Internal Server Error',
+            503 => 'Service Unavailable'];
         $r = "HTTP/1.1 $codigo " . ($textos[$codigo] ?? 'OK') . "\r\n"
             . "Content-Type: $tipo\r\n"
             . 'Content-Length: ' . strlen($corpo) . "\r\n"
             . "Cache-Control: no-cache\r\n"
             . "X-Content-Type-Options: nosniff\r\n"
-            . "Referrer-Policy: same-origin\r\n"
-            . "Connection: close\r\n\r\n"
-            . ($soCabecalho ? '' : $corpo);
+            . "Referrer-Policy: same-origin\r\n";
+        foreach ($extra as $nome => $valor) {
+            $r .= "$nome: $valor\r\n";
+        }
+        $r .= "Connection: close\r\n\r\n" . ($soCab ? '' : $corpo);
         $this->c[$k]['fechar'] = true;
         $this->enfileirar($k, $r);
     }
+
+    /* --------------------------- biblioteca --------------------------- */
+
+    private function arquivoDoc(string $id): string
+    {
+        return $this->dados . '/docs/' . $id . '.html';
+    }
+
+    private function prepararBiblioteca(): void
+    {
+        $pasta = $this->dados . '/docs';
+        if (!is_dir($pasta) && !@mkdir($pasta, 0775, true)) {
+            $this->log("Não consegui criar a pasta $pasta. Confira o volume de dados.");
+            return;
+        }
+        /* As aulas que vêm com o aplicativo (pasta aulas/) entram na biblioteca uma vez cada.
+           Se você apagar uma delas, ela não volta. */
+        $existia = is_file($this->dados . '/biblioteca.json');
+        $arqSemeados = $this->dados . '/semeados.json';
+        $semeados = json_decode((string) @file_get_contents($arqSemeados), true);
+        if (!is_array($semeados)) {
+            /* Instalações da versão anterior já tinham recebido a aula de funções. */
+            $semeados = $existia ? ['funcoes.html'] : [];
+        }
+        $lista = $existia ? $this->lerBiblioteca() : [];
+        $novos = 0;
+        foreach (glob($this->aulas . '/*.html') ?: [] as $arq) {
+            $nome = basename($arq);
+            if (in_array($nome, $semeados, true)) {
+                continue;
+            }
+            $html = (string) file_get_contents($arq);
+            $id = $this->novoId();
+            if (@file_put_contents($this->arquivoDoc($id), $html) === false) {
+                continue;
+            }
+            $lista[] = ['id' => $id, 'titulo' => $this->tituloDe($html, basename($arq, '.html')),
+                'largura' => LARGURA_PADRAO, 'tamanho' => strlen($html), 'criado' => time(), 'origem' => $nome];
+            $semeados[] = $nome;
+            $novos++;
+        }
+        if (($novos > 0 || !$existia) && $this->salvarBiblioteca($lista)) {
+            $this->log($existia ? "Biblioteca: $novos aula(s) nova(s) do aplicativo." : 'Biblioteca criada com ' . count($lista) . ' documento(s).');
+        }
+        @file_put_contents($arqSemeados, json_encode(array_values($semeados)));
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private function lerBiblioteca(): array
+    {
+        $j = @file_get_contents($this->dados . '/biblioteca.json');
+        $lista = $j === false ? [] : json_decode($j, true);
+        if (!is_array($lista)) {
+            return [];
+        }
+        return array_values(array_filter($lista, fn($d) => is_array($d) && isset($d['id'])
+            && is_string($d['id']) && preg_match('/^[a-z0-9]{10}$/', $d['id'])));
+    }
+
+    /** @param array<int, array<string, mixed>> $lista */
+    private function salvarBiblioteca(array $lista): bool
+    {
+        $arq = $this->dados . '/biblioteca.json';
+        $tmp = $arq . '.tmp';
+        $json = json_encode(array_values($lista), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        if ($json === false || @file_put_contents($tmp, $json) === false || !@rename($tmp, $arq)) {
+            $this->log("Não consegui gravar $arq");
+            return false;
+        }
+        return true;
+    }
+
+    /** @param array<string, string> $h */
+    private function importar(int $k, array $h, string $corpo): void
+    {
+        if (!$this->exigirLogin($k, $h)) {
+            return;
+        }
+        if (trim($corpo) === '') {
+            $this->responderJson($k, 400, ['erro' => 'O arquivo está vazio.']);
+            return;
+        }
+        $lista = $this->lerBiblioteca();
+        if (count($lista) >= MAX_DOCS) {
+            $this->responderJson($k, 400, ['erro' => 'A biblioteca chegou a ' . MAX_DOCS . ' documentos. Apague alguns antes de importar.']);
+            return;
+        }
+        $titulo = $this->limparTexto(rawurldecode($h['x-titulo'] ?? ''), 120);
+        if ($titulo === '') {
+            $titulo = $this->tituloDe($corpo, 'Documento sem título');
+        }
+        $doc = ['id' => $this->novoId(), 'titulo' => $titulo, 'largura' => $this->limparLargura($h['x-largura'] ?? null),
+            'tamanho' => strlen($corpo), 'criado' => time()];
+        if (@file_put_contents($this->arquivoDoc($doc['id']), $corpo) === false) {
+            $this->responderJson($k, 500, ['erro' => 'Não consegui salvar o arquivo no servidor. Confira o volume de dados.']);
+            return;
+        }
+        array_unshift($lista, $doc);
+        if (!$this->salvarBiblioteca($lista)) {
+            @unlink($this->arquivoDoc($doc['id']));
+            $this->responderJson($k, 500, ['erro' => 'Não consegui atualizar a biblioteca no servidor.']);
+            return;
+        }
+        $this->log("Documento importado: {$doc['titulo']} ({$doc['id']}, " . round($doc['tamanho'] / 1024) . ' KB)');
+        $this->responderJson($k, 201, ['doc' => $doc]);
+    }
+
+    /** @param array<string, string> $h */
+    private function editar(int $k, array $h, string $id, string $corpo): void
+    {
+        if (!$this->exigirLogin($k, $h)) {
+            return;
+        }
+        $d = json_decode($corpo, true);
+        if (!is_array($d)) {
+            $this->responderJson($k, 400, ['erro' => 'Pedido inválido.']);
+            return;
+        }
+        $lista = $this->lerBiblioteca();
+        foreach ($lista as $i => $doc) {
+            if ($doc['id'] !== $id) {
+                continue;
+            }
+            if (isset($d['titulo'])) {
+                $t = $this->limparTexto((string) $d['titulo'], 120);
+                if ($t === '') {
+                    $this->responderJson($k, 400, ['erro' => 'Dê um título para o documento.']);
+                    return;
+                }
+                $lista[$i]['titulo'] = $t;
+            }
+            if (isset($d['largura'])) {
+                $lista[$i]['largura'] = $this->limparLargura($d['largura']);
+            }
+            if (!$this->salvarBiblioteca($lista)) {
+                $this->responderJson($k, 500, ['erro' => 'Não consegui atualizar a biblioteca no servidor.']);
+                return;
+            }
+            $this->responderJson($k, 200, ['doc' => $lista[$i]]);
+            return;
+        }
+        $this->responderJson($k, 404, ['erro' => 'Esse documento não existe mais.']);
+    }
+
+    /** @param array<string, string> $h */
+    private function apagar(int $k, array $h, string $id): void
+    {
+        if (!$this->exigirLogin($k, $h)) {
+            return;
+        }
+        $lista = $this->lerBiblioteca();
+        $nova = array_values(array_filter($lista, fn($d) => $d['id'] !== $id));
+        if (count($nova) === count($lista)) {
+            $this->responderJson($k, 404, ['erro' => 'Esse documento não existe mais.']);
+            return;
+        }
+        if (!$this->salvarBiblioteca($nova)) {
+            $this->responderJson($k, 500, ['erro' => 'Não consegui atualizar a biblioteca no servidor.']);
+            return;
+        }
+        @unlink($this->arquivoDoc($id));
+        $this->log("Documento apagado: $id");
+        $this->responderJson($k, 200, ['ok' => true]);
+    }
+
+    private function tituloDe(string $html, string $padrao): string
+    {
+        if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m)) {
+            $t = $this->limparTexto(html_entity_decode(strip_tags($m[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8'), 120);
+            if ($t !== '') {
+                return $t;
+            }
+        }
+        return $this->limparTexto($padrao, 120) ?: 'Documento sem título';
+    }
+
+    private function limparTexto(string $t, int $max): string
+    {
+        if (!preg_match('//u', $t)) {          // não é UTF-8 válido: trata como Latin-1
+            $t = function_exists('mb_convert_encoding') ? (string) mb_convert_encoding($t, 'UTF-8', 'ISO-8859-1') : '';
+        }
+        $t = trim((string) preg_replace('/\s+/u', ' ', (string) preg_replace('/[\x00-\x1F\x7F]/u', ' ', $t)));
+        preg_match('/^.{0,' . $max . '}/us', $t, $m);
+        return trim($m[0] ?? '');
+    }
+
+    private function limparLargura(mixed $v): int
+    {
+        $n = (int) $v;
+        return $n >= 320 && $n <= 1600 ? $n : LARGURA_PADRAO;
+    }
+
+    private function novoId(): string
+    {
+        $abc = 'abcdefghijkmnpqrstuvwxyz23456789';
+        do {
+            $id = '';
+            for ($i = 0; $i < 10; $i++) {
+                $id .= $abc[random_int(0, strlen($abc) - 1)];
+            }
+        } while (is_file($this->arquivoDoc($id)));
+        return $id;
+    }
+
+    /* ------------------------- login do professor ------------------------- */
+
+    /** @param array<string, string> $h */
+    private function login(int $k, array $h, string $corpo): void
+    {
+        if ($this->senha === '') {
+            $this->responderJson($k, 503, ['erro' => 'A importação está desligada. Defina SENHA_PROFESSOR no arquivo .env da VPS e reinicie.']);
+            return;
+        }
+        $ip = $this->ipDe($k, $h);
+        $agora = time();
+        $this->falhas[$ip] = array_values(array_filter($this->falhas[$ip] ?? [], fn($t) => $agora - $t < JANELA_FALHAS));
+        if (count($this->falhas[$ip]) >= MAX_FALHAS) {
+            $this->responderJson($k, 429, ['erro' => 'Muitas tentativas erradas. Espere 15 minutos e tente de novo.']);
+            return;
+        }
+        $d = json_decode($corpo, true);
+        $senha = is_array($d) && is_string($d['senha'] ?? null) ? $d['senha'] : '';
+        if (!hash_equals($this->senha, $senha)) {
+            $this->falhas[$ip][] = $agora;
+            $this->log("Senha de professor errada ($ip)");
+            $this->responderJson($k, 401, ['erro' => 'Senha incorreta.']);
+            return;
+        }
+        unset($this->falhas[$ip]);
+        $exp = $agora + TOKEN_DIAS * 86400;
+        $this->responderJson($k, 200, ['token' => $exp . '.' . hash_hmac('sha256', 'aula:' . $exp, $this->senha)]);
+    }
+
+    /** @param array<string, string> $h */
+    private function autorizado(array $h): bool
+    {
+        if ($this->senha === '') {
+            return false;
+        }
+        if (!preg_match('/^Bearer\s+(\d{9,12})\.([a-f0-9]{64})$/', $h['authorization'] ?? '', $m)) {
+            return false;
+        }
+        return (int) $m[1] >= time() && hash_equals(hash_hmac('sha256', 'aula:' . $m[1], $this->senha), $m[2]);
+    }
+
+    /** @param array<string, string> $h */
+    private function exigirLogin(int $k, array $h): bool
+    {
+        if ($this->autorizado($h)) {
+            return true;
+        }
+        $this->responderJson($k, 401, ['erro' => 'Entre com a senha de professor para mexer na biblioteca.']);
+        return false;
+    }
+
+    /** @param array<string, string> $h */
+    private function ipDe(int $k, array $h): string
+    {
+        $xff = trim(explode(',', $h['x-forwarded-for'] ?? '')[0]);
+        return $xff !== '' ? substr($xff, 0, 64) : (string) $this->c[$k]['peer'];
+    }
+
+    /* ---------------------------- WebSocket ---------------------------- */
 
     /** @param array<string, string> $h */
     private function aceitarWs(int $k, array $h): void
@@ -205,7 +632,7 @@ final class Servidor
         $chave = $h['sec-websocket-key'] ?? '';
         if (strtolower($h['upgrade'] ?? '') !== 'websocket' || $chave === ''
             || ($h['sec-websocket-version'] ?? '') !== '13') {
-            $this->responderHttp($k, 400, 'text/plain; charset=utf-8', 'Esperava uma conexão WebSocket');
+            $this->responderTexto($k, 400, 'Esperava uma conexão WebSocket');
             return;
         }
         /* Só aceita conexões vindas da própria página (mesmo endereço). */
@@ -214,7 +641,7 @@ final class Servidor
             $hostOrigem = strtolower((string) parse_url($origem, PHP_URL_HOST));
             $hostPedido = strtolower((string) preg_replace('/:\d+$/', '', $h['host'] ?? ''));
             if ($hostOrigem !== $hostPedido) {
-                $this->responderHttp($k, 403, 'text/plain; charset=utf-8', 'Origem não permitida');
+                $this->responderTexto($k, 403, 'Origem não permitida');
                 return;
             }
         }
@@ -229,8 +656,6 @@ final class Servidor
             $this->lerFrames($k);
         }
     }
-
-    /* ---------------------------- WebSocket ---------------------------- */
 
     private function lerFrames(int $k): void
     {
@@ -469,9 +894,7 @@ final class Servidor
 
     private function limparNome(mixed $nome): string
     {
-        $nome = is_string($nome) ? $nome : '';
-        $nome = trim((string) preg_replace('/[\x00-\x1F\x7F]/u', '', $nome));
-        $nome = trim(function_exists('mb_substr') ? mb_substr($nome, 0, 20) : substr($nome, 0, 20));
+        $nome = $this->limparTexto(is_string($nome) ? $nome : '', 20);
         return $nome !== '' ? $nome : 'Visitante';
     }
 
@@ -483,7 +906,7 @@ final class Servidor
             return;
         }
         $this->c[$k]['out'] .= $bytes;
-        if (strlen($this->c[$k]['out']) > MAX_SAIDA) {
+        if ($this->c[$k]['ws'] && strlen($this->c[$k]['out']) > MAX_SAIDA_WS) {
             $this->desconectar($k);
             return;
         }
@@ -498,6 +921,9 @@ final class Servidor
             if ($n === false) {
                 $this->desconectar($k);
                 return;
+            }
+            if ($n > 0) {
+                $this->c[$k]['visto'] = microtime(true);
             }
             $this->c[$k]['out'] = (string) substr($out, $n);
         }
@@ -534,6 +960,11 @@ final class Servidor
                 $this->enfileirar($k, $this->frame('', 0x9));
             }
         }
+        foreach ($this->falhas as $ip => $ts) {
+            if (!$ts || time() - max($ts) > JANELA_FALHAS) {
+                unset($this->falhas[$ip]);
+            }
+        }
     }
 
     private function log(string $msg): void
@@ -543,4 +974,10 @@ final class Servidor
 }
 
 date_default_timezone_set(getenv('TZ') ?: 'America/Sao_Paulo');
-(new Servidor((int) (getenv('PORTA') ?: 8080), __DIR__ . '/public'))->rodar();
+(new Servidor(
+    (int) (getenv('PORTA') ?: 8080),
+    __DIR__ . '/public',
+    __DIR__ . '/aulas',
+    rtrim((string) (getenv('DADOS') ?: __DIR__ . '/dados'), '/'),
+    (string) getenv('SENHA_PROFESSOR')
+))->rodar();
